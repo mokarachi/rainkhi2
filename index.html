@@ -281,7 +281,6 @@
         let modalTargetStation = "";
         let modalTargetSlot = "";
 
-        // SAFE DOM HELPER FUNCTION (Prevents null property errors)
         function setText(id, text) {
             const el = document.getElementById(id);
             if (el) el.innerText = text;
@@ -644,6 +643,9 @@
                         dateInput.value = data.rainfall_date;
                     }
 
+                    const isPastDate = (data.rainfall_date < data.today_rainfall_date);
+                    const isFutureDate = (data.rainfall_date > data.today_rainfall_date);
+
                     const stationMap = data.stations || {};
                     tableBody.innerHTML = "";
 
@@ -656,7 +658,14 @@
                         let rowHtml = `<tr class="hover:bg-slate-50 border-b"><td class="p-2 border text-left font-bold text-slate-800">${st}</td>`;
 
                         ALL_SLOTS.forEach((slot, idx) => {
-                            const isFuture = (idx > data.current_slot_idx);
+                            let isFuture = false;
+                            if (isFutureDate) {
+                                isFuture = true;
+                            } else if (!isPastDate) {
+                                // Today's date: Lock slots later than current slot index
+                                isFuture = (idx > data.current_slot_idx);
+                            }
+
                             const val = stSlots.hasOwnProperty(slot) ? stSlots[slot] : "--";
                             
                             let displayCell = "--";
