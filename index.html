@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monsoon Rainfall Logger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6">
+
+    <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-lg border border-slate-200">
+        
+        <!-- HEADER -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl mb-2 shadow-sm">
+                <i class="fa-solid font-bold text-2xl fa-cloud-showers-heavy"></i>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Rainfall Dashboard</h1>
+            <p class="text-xs font-semibold text-slate-400">Monsoon Observation System</p>
+        </div>
+
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Mobile Number</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <i class="fa-solid fa-phone"></i>
+                    </span>
+                    <input type="tel" id="phoneNumberInput" placeholder="e.g. 923001234567" 
+                           class="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-semibold text-slate-800 transition">
+                </div>
+            </div>
+            <button onclick="handleLogin()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 transition duration-150">
+                Sign In to Station
+            </button>
+            <p id="loginError" class="text-red-500 text-xs font-semibold text-center hidden"></p>
+        </div>
+
+        <!-- DASHBOARD & FORM -->
+        <div id="dataForm" class="hidden space-y-5">
+            
+            <!-- USER BADGE -->
+            <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
+                <div>
+                    <span class="text-slate-400 block font-semibold">Station Name</span>
+                    <span id="displayStation" class="font-bold text-slate-800 text-sm"></span>
+                </div>
+                <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition px-2 py-1 rounded-lg">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+
+            <!-- TODAY'S RAINFALL SUMMARY CARD -->
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 text-white shadow-lg shadow-blue-200 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="text-xs font-bold text-blue-200 uppercase tracking-wider">Today's Total Rain</p>
+                        <h2 class="text-3xl font-black mt-1"><span id="summaryTotalRain">0.0</span> <span class="text-lg font-medium text-blue-200">mm</span></h2>
+                    </div>
+                    <span id="summaryDate" class="text-[10px] font-extrabold bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-white">
+                        <i class="fa-regular fa-calendar-days mr-1"></i> <span id="displayDateText">--</span>
+                    </span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-white/10 flex justify-between items-center text-xs">
+                    <span class="text-blue-100 font-medium">Slots Completed:</span>
+                    <span id="summaryProgress" class="font-bold text-white bg-white/20 px-2 py-0.5 rounded-md">0 / 8</span>
+                </div>
+            </div>
+
+            <!-- 8-SLOT STATUS GRID -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Today's 8 UTC Slots</h3>
+                    <button onclick="refreshTodayHistory()" class="text-[11px] font-bold text-blue-600 hover:underline">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                    </button>
+                </div>
+                <div id="slotsGrid" class="grid grid-cols-2 gap-2">
+                    <!-- Dynamic slot cards loaded via JavaScript -->
+                </div>
+            </div>
+
+            <!-- INPUT FORM CARD -->
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl space-y-3">
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Submit New / Update Entry</h3>
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Select UTC Slot</label>
+                    <select id="slotSelect" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm bg-slate-50">
+                        <option value="03:00 - 06:00 UTC">03:00 - 06:00 UTC</option>
+                        <option value="06:00 - 09:00 UTC">06:00 - 09:00 UTC</option>
+                        <option value="09:00 - 12:00 UTC">09:00 - 12:00 UTC</option>
+                        <option value="12:00 - 15:00 UTC">12:00 - 15:00 UTC</option>
+                        <option value="15:00 - 18:00 UTC">15:00 - 18:00 UTC</option>
+                        <option value="18:00 - 21:00 UTC">18:00 - 21:00 UTC</option>
+                        <option value="21:00 - 00:00 UTC">21:00 - 00:00 UTC</option>
+                        <option value="00:00 - 03:00 UTC">00:00 - 03:00 UTC</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Rainfall Amount (mm)</label>
+                    <div class="relative">
+                        <input type="number" step="0.1" id="rainfallInput" placeholder="0.0" 
+                               class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold text-slate-800 bg-slate-50">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-4 font-bold text-slate-400 text-xs">mm</span>
+                    </div>
+                </div>
+
+                <button onclick="submitData()" id="submitBtn" 
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold py-3.5 rounded-xl shadow-md shadow-emerald-100 transition">
+                    Save Reading
+                </button>
+            </div>
+
+            <p id="statusMsg" class="text-xs font-bold text-center p-3 rounded-xl hidden"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. PASTE YOUR GOOGLE APPS SCRIPT URL HERE
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGYlxgaYdQF5YgN764FdxD-A1_hCk37zzetHsmHMKB7w_Nc2fZN-irQycZCmSrB5EW/exec";
+
+        // 2. WORKER MAPPING
+        const WORKERS = {
+            "923133764792": "Station 01 - Habib_Home",
+            "923420474962": "Station 02 - Idasar_Home",
+            "923131212478": "Station 03 - Kamran_Home",
+			      "923332214521": "Station 03 - Nizam_Home",
+            "923001234567": "Station 01 - Alpha",
+            "923009876543": "Station 02 - Beta",
+            "923000000003": "Station 03 - Gamma",
+            // Add all 21 workers here...
+        };
+
+        const ALL_SLOTS = [
+            "03:00 - 06:00 UTC",
+            "06:00 - 09:00 UTC",
+            "09:00 - 12:00 UTC",
+            "12:00 - 15:00 UTC",
+            "15:00 - 18:00 UTC",
+            "18:00 - 21:00 UTC",
+            "21:00 - 00:00 UTC",
+            "00:00 - 03:00 UTC"
+        ];
+
+        let todayEntries = {};
+
+        function getRecentUTCSlot() {
+            const now = new Date();
+            const hour = now.getUTCHours();
+            
+            let endHour = Math.floor(hour / 3) * 3;
+            let startHour = endHour - 3;
+
+            if (startHour < 0) {
+                startHour = 21;
+                endHour = 0;
+            }
+
+            const startStr = String(startHour).padStart(2, '0') + ":00";
+            const endStr = String(endHour).padStart(2, '0') + ":00";
+            return `${startStr} - ${endStr} UTC`;
+        }
+
+        window.onload = function() {
+            const savedPhone = localStorage.getItem("worker_phone");
+            if (savedPhone && WORKERS[savedPhone]) {
+                showDashboard(savedPhone);
+            }
+        };
+
+        function handleLogin() {
+            const phone = document.getElementById("phoneNumberInput").value.trim();
+            const errorEl = document.getElementById("loginError");
+
+            if (WORKERS[phone]) {
+                localStorage.setItem("worker_phone", phone);
+                errorEl.classList.add("hidden");
+                showDashboard(phone);
+            } else {
+                errorEl.innerText = "❌ Phone number not registered.";
+                errorEl.classList.remove("hidden");
+            }
+        }
+
+        function showDashboard(phone) {
+            document.getElementById("loginScreen").classList.add("hidden");
+            document.getElementById("dataForm").classList.remove("hidden");
+
+            document.getElementById("displayStation").innerText = WORKERS[phone];
+            document.getElementById("slotSelect").value = getRecentUTCSlot();
+
+            refreshTodayHistory();
+        }
+
+        function logout() {
+            localStorage.removeItem("worker_phone");
+            document.getElementById("dataForm").classList.add("hidden");
+            document.getElementById("loginScreen").classList.remove("hidden");
+        }
+
+        async function refreshTodayHistory() {
+            const phone = localStorage.getItem("worker_phone");
+            const activeSlot = getRecentUTCSlot();
+
+            try {
+                const response = await fetch(SCRIPT_URL + "?phone=" + encodeURIComponent(phone));
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    todayEntries = data.entries || {};
+                    document.getElementById("summaryTotalRain").innerText = data.total_mm.toFixed(1);
+                    document.getElementById("displayDateText").innerText = data.rainfall_date;
+
+                    let completedCount = Object.keys(todayEntries).length;
+                    document.getElementById("summaryProgress").innerText = `${completedCount} / 8`;
+
+                    renderSlotsGrid(activeSlot);
+                }
+            } catch (err) {
+                renderSlotsGrid(activeSlot);
+            }
+        }
+
+        function renderSlotsGrid(activeSlot) {
+            const gridEl = document.getElementById("slotsGrid");
+            gridEl.innerHTML = "";
+
+            ALL_SLOTS.forEach(slot => {
+                const isFilled = todayEntries.hasOwnProperty(slot);
+                const value = isFilled ? todayEntries[slot] : null;
+                const isActive = (slot === activeSlot);
+
+                let cardClass = "p-2.5 rounded-xl border flex justify-between items-center text-xs transition ";
+                
+                if (isFilled) {
+                    cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900";
+                } else if (isActive) {
+                    cardClass += "bg-blue-50 border-blue-300 text-blue-900 ring-2 ring-blue-400/30";
+                } else {
+                    cardClass += "bg-slate-50 border-slate-200 text-slate-400";
+                }
+
+                gridEl.innerHTML += `
+                    <div class="${cardClass}">
+                        <div>
+                            <span class="font-bold block text-[11px]">${slot.replace(' UTC', '')}</span>
+                            <span class="text-[9px] uppercase font-bold text-slate-400">${isFilled ? 'Recorded' : (isActive ? 'Active' : 'Pending')}</span>
+                        </div>
+                        <span class="font-black text-sm ${isFilled ? 'text-emerald-700' : 'text-slate-300'}">
+                            ${isFilled ? value + ' mm' : '--'}
+                        </span>
+                    </div>
+                `;
+            });
+        }
+
+        async function submitData() {
+            const phone = localStorage.getItem("worker_phone");
+            const station = WORKERS[phone];
+            const selectedSlot = document.getElementById("slotSelect").value;
+            const rainfall = document.getElementById("rainfallInput").value;
+            const statusMsg = document.getElementById("statusMsg");
+            const submitBtn = document.getElementById("submitBtn");
+
+            if (rainfall === "" || rainfall < 0 || rainfall > 300) {
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
+                statusMsg.innerText = "Please enter a valid rain amount (0 - 300 mm).";
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving Reading...";
+            statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-blue-600 bg-blue-50 block";
+            statusMsg.innerText = "Connecting to Google Sheets...";
+
+            const payload = {
+                timestamp: new Date().toISOString(),
+                phone: phone,
+                station: station,
+                utc_slot: selectedSlot,
+                rainfall: parseFloat(rainfall)
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payload)
+                });
+
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-emerald-700 bg-emerald-50 block";
+                statusMsg.innerText = `✅ Saved ${rainfall} mm for [${selectedSlot}]!`;
+                document.getElementById("rainfallInput").value = "";
+
+                // Refresh dashboard automatically
+                setTimeout(refreshTodayHistory, 1000);
+
+            } catch (error) {
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
+                statusMsg.innerText = "❌ Network Error: " + error.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Save Reading";
+            }
+        }
+    </script>
+</body>
+</html>
