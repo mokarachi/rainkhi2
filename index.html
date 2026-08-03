@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMD Rainfall Dashboard</title>
+    <title>Monsoon Rainfall Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -20,54 +20,54 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 font-sans text-slate-800">
 
-    <div id="mainContainer" class="bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-xl border border-slate-200">
+    <div id="mainContainer" class="bg-white p-3.5 sm:p-5 rounded-3xl shadow-xl w-full max-w-md border border-slate-200">
         
         <!-- HEADER -->
-        <div id="appMainHeader" class="text-center mb-6 no-print">
-            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl mb-2 shadow-sm">
-                <i class="fa-solid font-bold text-2xl fa-cloud-showers-heavy"></i>
+        <div id="appMainHeader" class="text-center mb-3 no-print">
+            <div class="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-xl mb-1 shadow-sm">
+                <i class="fa-solid font-bold text-xl fa-cloud-showers-heavy"></i>
             </div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">PMD Rainfall System</h1>
-            <p class="text-xs font-semibold text-slate-400">Rain Observation Network, Karachi</p>
+            <h1 class="text-lg font-black text-slate-800 tracking-tight leading-none">Monsoon Rainfall System</h1>
+            <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Meteorological Observation Network</p>
         </div>
 
         <!-- LOGIN SCREEN -->
-        <div id="loginScreen" class="space-y-4 no-print">
+        <div id="loginScreen" class="space-y-3 no-print">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Registered Mobile Number</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Registered Mobile Number</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                         <i class="fa-solid fa-phone"></i>
                     </span>
                     <input type="tel" id="phoneNumberInput" placeholder="Enter Mobile Number" 
-                           class="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-800">
+                           class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-800 text-sm">
                 </div>
             </div>
             <button onclick="handleLogin()" id="loginBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 transition">
+                    class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3 rounded-xl shadow-md shadow-blue-200 transition text-sm">
                 Sign In to Station
             </button>
             <p id="loginError" class="text-red-500 text-xs font-bold text-center hidden"></p>
         </div>
 
-        <!-- WORKER & MASTER WORKER DASHBOARD -->
-        <div id="dataForm" class="hidden space-y-4 no-print">
-            
-            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs">
-                <div>
-                    <span class="text-slate-400 block font-semibold">Station Name</span>
-                    <span id="displayStation" class="font-bold text-slate-800 text-sm"></span>
-                </div>
-                <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition px-2 py-1">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
-            </div>
 
-            <!-- MASTER WORKER STATION SELECTOR -->
-            <div id="masterWorkerSection" class="hidden bg-purple-50 border border-purple-200 p-2 rounded-xl">
-                <div class="flex items-center gap-2">
+        <!-- WORKER & MASTER WORKER DASHBOARD -->
+        <div id="dataForm" class="hidden space-y-2.5 no-print">
+            
+            <!-- MASTER WORKER VIEW MODE TOGGLE -->
+            <div id="masterWorkerSection" class="hidden bg-purple-50 border border-purple-200 p-2 rounded-xl space-y-2">
+                <div class="flex bg-purple-100 p-0.5 rounded-lg text-[11px] font-bold text-center">
+                    <button onclick="setMasterViewMode('station_wise')" id="masterModeStationBtn" class="w-1/2 py-1 rounded-md bg-white text-purple-900 shadow-sm">
+                        📍 Station-Wise
+                    </button>
+                    <button onclick="setMasterViewMode('slot_wise')" id="masterModeSlotBtn" class="w-1/2 py-1 rounded-md text-purple-600 hover:text-purple-900">
+                        ⏰ Slot-Wise (7x3 Grid)
+                    </button>
+                </div>
+
+                <div id="masterStationSelectorBox" class="flex items-center gap-2">
                     <span class="text-[10px] font-black text-purple-800 uppercase whitespace-nowrap"><i class="fa-solid fa-user-gear"></i> Station:</span>
                     <select id="masterStationSelect" onchange="onMasterStationChange()" 
                             class="w-full p-1.5 bg-white border border-purple-300 rounded-lg font-bold text-purple-900 text-xs outline-none focus:ring-2 focus:ring-purple-400">
@@ -75,90 +75,119 @@
                 </div>
             </div>
 
-            <!-- SUMMARY CARD -->
+            <!-- UNIFIED TOP SUMMARY BANNER -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-3 text-white shadow-md flex items-center justify-between">
                 <div class="space-y-0.5">
+                    <div class="flex items-center gap-1.5">
+                        <span id="displayStation" class="font-black text-xs sm:text-sm text-white truncate max-w-[170px]"></span>
+                        <button onclick="logout()" class="text-blue-200 hover:text-white text-xs px-1" title="Logout">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
                     <p class="text-[10px] font-semibold text-blue-200 flex items-center gap-2">
                         <span><i class="fa-regular fa-calendar mr-1"></i><span id="displayDateText">--</span></span>
                         <span>• Slots: <strong id="summaryProgress" class="text-white">0/8</strong></span>
                     </p>
                 </div>
+                
                 <div class="text-right">
                     <span class="text-[9px] font-extrabold uppercase text-blue-200 block tracking-wider">Today's Total</span>
                     <span class="text-2xl font-black leading-none tracking-tight"><span id="summaryTotalRain">0.0</span><span class="text-xs font-normal text-blue-200 ml-0.5">mm</span></span>
                 </div>
             </div>
 
-            <!-- 4x2 COMPACT GRID -->
-            <div>
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tap Slot to Select:</span>
-                    <button onclick="refreshTodayHistory()" class="text-[10px] font-bold text-blue-600 hover:underline">
-                        <i class="fa-solid fa-rotate-right mr-0.5"></i> Refresh
-                    </button>
-                </div>
-                <div id="slotsGrid" class="grid grid-cols-4 gap-1.5"></div>
-            </div>
-
-            <!-- MODE SWITCH -->
-            <div class="flex bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold text-center">
-                <button onclick="setMode('single')" id="modeSingleBtn" class="w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
-                    Single Slot Entry
-                </button>
-                <button onclick="setMode('accumulative')" id="modeAccBtn" class="w-1/2 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
-                    <i class="fa-solid fa-layer-group mr-1"></i> Accumulative
-                </button>
-            </div>
-
-            <!-- SINGLE ENTRY CARD -->
-            <div id="singleEntryCard" class="bg-blue-50/40 border border-blue-200 p-2.5 rounded-2xl space-y-2">
-                <div class="flex justify-between items-center">
-                    <span class="text-[10px] font-black uppercase text-blue-700">Slot: <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs ml-1 bg-blue-100 px-2 py-0.5 rounded-md">--</span></span>
-                    <button onclick="setTraceValue()" type="button" class="text-[10px] font-extrabold bg-purple-100 text-purple-700 hover:bg-purple-200 px-2 py-1 rounded-lg transition">
-                        <i class="fa-solid fa-droplet mr-0.5"></i> Trace (T)
-                    </button>
-                </div>
-
-                <div class="relative">
-                    <input type="number" step="0.01" id="rainfallInput" placeholder="0.0" 
-                           class="w-full py-2 px-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-2xl font-black text-slate-800 bg-white shadow-inner">
-                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 font-extrabold text-slate-400 text-xs">mm</span>
-                </div>
-
-                <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                    <span id="editCountBadge">Slot Updates: 0/3</span>
-                    <button onclick="submitData()" id="submitBtn" 
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow transition text-xs">
-                        Save Reading
-                    </button>
-                </div>
-            </div>
-
-            <!-- ACCUMULATIVE ENTRY CARD -->
-            <div id="accumulativeEntryCard" class="hidden bg-purple-50/50 border border-purple-200 p-2.5 rounded-2xl space-y-2">
-                <p class="text-[10px] font-bold text-purple-800"><i class="fa-solid fa-circle-info mr-0.5"></i> Merges earlier slots into ending slot.</p>
-
-                <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-                    <div>
-                        <label class="block font-bold text-slate-500 mb-0.5">From Slot</label>
-                        <select id="accStartSlot" class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none text-xs"></select>
+            <!-- STATION-WISE VIEW CONTAINER -->
+            <div id="workerStationWiseContainer" class="space-y-2.5">
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tap Slot to Select:</span>
+                        <button onclick="refreshTodayHistory()" class="text-[10px] font-bold text-blue-600 hover:underline">
+                            <i class="fa-solid fa-rotate-right mr-0.5"></i> Refresh
+                        </button>
                     </div>
-                    <div>
-                        <label class="block font-bold text-slate-500 mb-0.5">To Slot (End)</label>
-                        <select id="accEndSlot" class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none text-xs"></select>
+                    <div id="slotsGrid" class="grid grid-cols-4 gap-1.5"></div>
+                </div>
+
+                <div class="flex bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold text-center">
+                    <button onclick="setMode('single')" id="modeSingleBtn" class="w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
+                        Single Slot Entry
+                    </button>
+                    <button onclick="setMode('accumulative')" id="modeAccBtn" class="w-1/2 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                        <i class="fa-solid fa-layer-group mr-1"></i> Accumulative
+                    </button>
+                </div>
+
+                <div id="singleEntryCard" class="bg-blue-50/40 border border-blue-200 p-2.5 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-black uppercase text-blue-700">Slot: <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs ml-1 bg-blue-100 px-2 py-0.5 rounded-md">--</span></span>
+                        <button onclick="setTraceValue()" type="button" class="text-[10px] font-extrabold bg-purple-100 text-purple-700 hover:bg-purple-200 px-2 py-1 rounded-lg transition">
+                            <i class="fa-solid fa-droplet mr-0.5"></i> Trace (T)
+                        </button>
+                    </div>
+
+                    <div class="relative">
+                        <input type="number" step="0.01" id="rainfallInput" placeholder="0.0" 
+                               class="w-full py-2 px-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-2xl font-black text-slate-800 bg-white shadow-inner">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 font-extrabold text-slate-400 text-xs">mm</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                        <span id="editCountBadge">Slot Updates: 0/3</span>
+                        <button onclick="submitData()" id="submitBtn" 
+                                class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow transition text-xs">
+                            Save Reading
+                        </button>
                     </div>
                 </div>
 
-                <div class="relative">
-                    <input type="number" step="0.1" id="accRainfallInput" placeholder="Total Rain (mm)" 
-                           class="w-full py-1.5 px-3 border rounded-xl font-black text-slate-800 text-xl bg-white outline-none">
-                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 font-extrabold text-slate-400 text-xs">mm</span>
-                </div>
+                <div id="accumulativeEntryCard" class="hidden bg-purple-50/50 border border-purple-200 p-2.5 rounded-2xl space-y-2">
+                    <p class="text-[10px] font-bold text-purple-800"><i class="fa-solid fa-circle-info mr-0.5"></i> Merges earlier slots into ending slot.</p>
 
-                <button onclick="submitAccumulativeData()" id="accSubmitBtn" 
-                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl shadow transition text-xs">
-                    Save Accumulative Reading
-                </button>
+                    <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                        <div>
+                            <label class="block font-bold text-slate-500 mb-0.5">From Slot</label>
+                            <select id="accStartSlot" class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none text-xs"></select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-500 mb-0.5">To Slot (End)</label>
+                            <select id="accEndSlot" class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none text-xs"></select>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <input type="number" step="0.1" id="accRainfallInput" placeholder="Total Rain (mm)" 
+                               class="w-full py-1.5 px-3 border rounded-xl font-black text-slate-800 text-xl bg-white outline-none">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 font-extrabold text-slate-400 text-xs">mm</span>
+                    </div>
+
+                    <button onclick="submitAccumulativeData()" id="accSubmitBtn" 
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl shadow transition text-xs">
+                        Save Accumulative Reading
+                    </button>
+                </div>
+            </div>
+
+            <!-- MASTER WORKER: SLOT-WISE BATCH ENTRY CONTAINER (7x3 GRID) -->
+            <div id="masterSlotWiseContainer" class="hidden space-y-2.5">
+                <div class="bg-purple-50/70 border border-purple-200 p-2.5 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <label class="font-extrabold text-purple-900">Select Slot for Batch Entry:</label>
+                        <select id="masterBatchSlotSelect" onchange="loadMasterSlotWiseGrid()" 
+                                class="p-1.5 bg-white border border-purple-300 rounded-xl font-bold text-purple-900 text-xs outline-none">
+                            <!-- Populated in JS -->
+                        </select>
+                    </div>
+
+                    <!-- 7 ROWS x 3 COLUMNS GRID FOR ALL 21 STATIONS -->
+                    <div id="master7x3Grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 max-h-[350px] overflow-y-auto pr-1">
+                        <!-- 21 Station cards loaded in JS -->
+                    </div>
+
+                    <button onclick="submitMasterBatchReadings()" id="masterBatchSubmitBtn" 
+                            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold py-3 rounded-xl shadow transition text-xs">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save All Stations for Selected Slot
+                    </button>
+                </div>
             </div>
 
             <p id="statusMsg" class="text-xs font-bold text-center p-2 rounded-xl hidden"></p>
@@ -178,7 +207,6 @@
                 </button>
             </div>
 
-            <!-- ADMIN VIEW TOGGLE (DAILY vs MONTHLY) -->
             <div class="flex bg-slate-100 p-0.5 rounded-xl text-xs font-bold text-center no-print">
                 <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
                     <i class="fa-solid fa-calendar-day mr-1"></i> Daily Summary (3-Hour Slots)
@@ -188,7 +216,6 @@
                 </button>
             </div>
 
-            <!-- DAILY CONTROLS BAR -->
             <div id="adminDailyControls" class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1 text-xs font-bold text-blue-900">
                     <span>Date:</span>
@@ -210,7 +237,6 @@
                 </button>
             </div>
 
-            <!-- MONTHLY CONTROLS BAR -->
             <div id="adminMonthlyControls" class="hidden flex flex-wrap justify-between items-center gap-2 bg-purple-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-purple-900">
                     <span>Select Month:</span>
@@ -224,13 +250,11 @@
                 </button>
             </div>
 
-            <!-- PRINT HEADER (DAILY & MONTHLY) -->
             <div class="hidden print-only text-center mb-2">
                 <h2 style="font-size: 15px; font-weight: bold;" id="printHeaderTitle">MONSOON RAINFALL SUMMARY REPORT</h2>
                 <p style="font-size: 10px;" id="printHeaderSubtitle">Meteorological Rainfall Date: <span id="adminPrintDate">--</span></p>
             </div>
 
-            <!-- DAILY 21 STATIONS MATRIX TABLE -->
             <div id="adminDailyTableContainer" class="overflow-x-auto">
                 <table id="adminMatrixTable" class="w-full text-[10px] text-center border-collapse">
                     <thead>
@@ -251,7 +275,6 @@
                 </table>
             </div>
 
-            <!-- MONTHLY DAY-WISE MATRIX TABLE -->
             <div id="adminMonthlyTableContainer" class="hidden overflow-x-auto">
                 <table id="adminMonthlyMatrixTable" class="w-full text-[9px] text-center border-collapse">
                     <thead id="adminMonthlyTableHeader"></thead>
@@ -259,7 +282,6 @@
                 </table>
             </div>
 
-            <!-- PRINT FOOTER -->
             <div class="hidden print-only text-[10px] mt-3 flex justify-between">
                 <span>Generated On: <span id="printGeneratedTime"></span></span>
                 <span>Verified By: ___________________</span>
@@ -319,10 +341,12 @@
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
         let todayRainfallDateGlobal = "";
-        let adminViewMode = "daily"; // 'daily' or 'monthly'
+        let adminViewMode = "daily";
 
         let masterStationsList = [];
         let selectedMasterTargetPhone = "";
+        let masterViewMode = "station_wise"; // 'station_wise' or 'slot_wise'
+        let masterAllStationsData = {};
 
         let modalTargetPhone = "";
         let modalTargetStation = "";
@@ -441,37 +465,26 @@
             document.getElementById("mainContainer").className = "bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-md border border-slate-200";
         }
 
-        function setAdminViewMode(mode) {
-            adminViewMode = mode;
-            if (mode === 'daily') {
-                document.getElementById("adminDailyControls").classList.remove("hidden");
-                document.getElementById("adminMonthlyControls").classList.add("hidden");
-                document.getElementById("adminDailyTableContainer").classList.remove("hidden");
-                document.getElementById("adminMonthlyTableContainer").classList.add("hidden");
-                
-                document.getElementById("adminModeDailyBtn").className = "w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600 font-bold";
-                document.getElementById("adminModeMonthlyBtn").className = "w-1/2 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
-                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-4xl border border-slate-200";
-
-                loadAdminMasterSummary();
+        // MASTER WORKER TOGGLE
+        function setMasterViewMode(mode) {
+            masterViewMode = mode;
+            if (mode === 'station_wise') {
+                document.getElementById("workerStationWiseContainer").classList.remove("hidden");
+                document.getElementById("masterSlotWiseContainer").classList.add("hidden");
+                document.getElementById("masterStationSelectorBox").classList.remove("hidden");
+                document.getElementById("masterModeStationBtn").className = "w-1/2 py-1 rounded-md bg-white text-purple-900 shadow-sm font-bold";
+                document.getElementById("masterModeSlotBtn").className = "w-1/2 py-1 rounded-md text-purple-600 font-bold hover:text-purple-900";
+                document.getElementById("mainContainer").className = "bg-white p-3.5 sm:p-5 rounded-3xl shadow-xl w-full max-w-md border border-slate-200";
             } else {
-                document.getElementById("adminDailyControls").classList.add("hidden");
-                document.getElementById("adminMonthlyControls").classList.remove("hidden");
-                document.getElementById("adminDailyTableContainer").classList.add("hidden");
-                document.getElementById("adminMonthlyTableContainer").classList.remove("hidden");
+                document.getElementById("workerStationWiseContainer").classList.add("hidden");
+                document.getElementById("masterSlotWiseContainer").classList.remove("hidden");
+                document.getElementById("masterStationSelectorBox").classList.add("hidden");
+                document.getElementById("masterModeSlotBtn").className = "w-1/2 py-1 rounded-md bg-white text-purple-900 shadow-sm font-bold";
+                document.getElementById("masterModeStationBtn").className = "w-1/2 py-1 rounded-md text-purple-600 font-bold hover:text-purple-900";
+                document.getElementById("mainContainer").className = "bg-white p-3.5 sm:p-5 rounded-3xl shadow-xl w-full max-w-2xl border border-slate-200";
 
-                document.getElementById("adminModeMonthlyBtn").className = "w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-purple-600 font-bold";
-                document.getElementById("adminModeDailyBtn").className = "w-1/2 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
-                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-7xl border border-slate-200";
-
-                // Initialize month picker to current YYYY-MM if empty
-                const monthInput = document.getElementById("adminMonthPicker");
-                if (monthInput && !monthInput.value) {
-                    const now = new Date();
-                    const ym = now.toISOString().substring(0, 7);
-                    monthInput.value = ym;
-                }
-                loadAdminMonthlySummary();
+                populateMasterBatchSlotSelect();
+                loadMasterSlotWiseGrid();
             }
         }
 
@@ -506,6 +519,126 @@
             selectSlot(getRecentUTCSlot());
             refreshTodayHistory();
         }
+
+        // MASTER WORKER 7x3 BATCH GRID LOGIC
+        function populateMasterBatchSlotSelect() {
+            const selectEl = document.getElementById("masterBatchSlotSelect");
+            if (!selectEl) return;
+            selectEl.innerHTML = "";
+
+            ALL_SLOTS.forEach((slot, idx) => {
+                if (idx <= currentSlotIdx) {
+                    selectEl.innerHTML += `<option value="${slot}" ${idx === currentSlotIdx ? 'selected' : ''}>${slot.replace(' UTC', '')}</option>`;
+                }
+            });
+        }
+
+        async function loadMasterSlotWiseGrid() {
+            const gridEl = document.getElementById("master7x3Grid");
+            if (!gridEl) return;
+            gridEl.innerHTML = `<div class="col-span-3 p-4 text-center text-slate-400 font-bold">Loading 21 Stations Batch Grid...</div>`;
+
+            const masterPhone = localStorage.getItem("worker_phone");
+            const selectedSlot = document.getElementById("masterBatchSlotSelect").value;
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=get_master_all_data&phone=${encodeURIComponent(masterPhone)}`);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    masterAllStationsData = data.stations || {};
+                    gridEl.innerHTML = "";
+
+                    masterStationsList.forEach(st => {
+                        const stData = masterAllStationsData[st.name] || {};
+                        const stSlots = stData.slots || {};
+                        const val = stSlots.hasOwnProperty(selectedSlot) ? stSlots[selectedSlot] : "";
+
+                        gridEl.innerHTML += `
+                            <div class="bg-white border border-purple-200 p-2 rounded-xl flex flex-col justify-between space-y-1 shadow-sm">
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span class="font-extrabold text-slate-800 truncate max-w-[110px]" title="${st.name}">${st.name}</span>
+                                    <button onclick="setBatchTrace('${st.phone}')" type="button" class="bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-black text-[9px]">T</button>
+                                </div>
+                                <div class="relative">
+                                    <input type="number" step="0.01" id="batch_input_${st.phone}" value="${val === 'SEE_NEXT' ? '' : val}" placeholder="0.0" 
+                                           class="w-full p-1.5 border border-slate-200 rounded-lg font-black text-slate-800 text-sm outline-none focus:ring-1 focus:ring-purple-500 bg-slate-50">
+                                    <span class="absolute inset-y-0 right-0 flex items-center pr-2 text-[9px] font-bold text-slate-400">mm</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                gridEl.innerHTML = `<div class="col-span-3 p-4 text-center text-red-500 font-bold">Failed to load batch grid.</div>`;
+            }
+        }
+
+        function setBatchTrace(phone) {
+            const inputEl = document.getElementById(`batch_input_${phone}`);
+            if (inputEl) inputEl.value = "0.01";
+        }
+
+        async function submitMasterBatchReadings() {
+            const masterPhone = localStorage.getItem("worker_phone");
+            const selectedSlot = document.getElementById("masterBatchSlotSelect").value;
+            const statusMsg = document.getElementById("statusMsg");
+            const batchSubmitBtn = document.getElementById("masterBatchSubmitBtn");
+
+            let readingsList = [];
+
+            masterStationsList.forEach(st => {
+                const inputEl = document.getElementById(`batch_input_${st.phone}`);
+                if (inputEl && inputEl.value !== "") {
+                    readingsList.push({
+                        phone: st.phone,
+                        station: st.name,
+                        rainfall: parseFloat(inputEl.value)
+                    });
+                }
+            });
+
+            if (readingsList.length === 0) {
+                statusMsg.className = "text-xs font-bold text-center p-2 rounded-xl text-red-600 bg-red-50 block";
+                setText("statusMsg", "Please enter rain for at least one station!");
+                return;
+            }
+
+            batchSubmitBtn.disabled = true;
+            batchSubmitBtn.innerText = "Saving Batch Readings...";
+            statusMsg.className = "text-xs font-bold text-center p-2 rounded-xl text-purple-600 bg-purple-50 block";
+            setText("statusMsg", "Saving batch readings to Google Sheets...");
+
+            const payload = {
+                timestamp: new Date().toISOString(),
+                master_worker_phone: masterPhone,
+                utc_slot: selectedSlot,
+                is_batch_slot_submit: true,
+                readings: readingsList
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payload)
+                });
+
+                statusMsg.className = "text-xs font-bold text-center p-2 rounded-xl text-purple-700 bg-purple-50 block";
+                setText("statusMsg", `✅ Saved batch readings for ${readingsList.length} stations in [${selectedSlot}]!`);
+                
+                setTimeout(loadMasterSlotWiseGrid, 1200);
+
+            } catch (error) {
+                statusMsg.className = "text-xs font-bold text-center p-2 rounded-xl text-red-600 bg-red-50 block";
+                setText("statusMsg", "❌ Network Error: " + error.message);
+            } finally {
+                batchSubmitBtn.disabled = false;
+                batchSubmitBtn.innerText = "Save All Stations for Selected Slot";
+            }
+        }
+
 
         function setMode(mode) {
             if (mode === 'single') {
@@ -856,7 +989,6 @@
             }
         }
 
-        // ================= MONTHLY SUMMARY MATRIX LOGIC =================
         async function loadAdminMonthlySummary() {
             const tableHeader = document.getElementById("adminMonthlyTableHeader");
             const tableBody = document.getElementById("adminMonthlyTableBody");
@@ -881,12 +1013,11 @@
                     const daysCount = data.days_in_month || 31;
                     const stationMap = data.stations || {};
 
-                    // Build Dynamic Table Header (Day 1..31 + Total)
                     let headerHtml = `<tr class="bg-slate-100 text-slate-700 font-bold"><th class="p-1.5 border text-left min-w-[120px]">Station</th>`;
                     for (let d = 1; d <= daysCount; d++) {
                         headerHtml += `<th class="p-0.5 border w-[22px]">${d}</th>`;
                     }
-                    headerHtml += `<th class="p-1 border bg-purple-100 text-purple-900 font-black min-w-[50px]">Monthly Total (mm)</th></tr>`;
+                    headerHtml += `<th class="p-1 border bg-purple-100 text-purple-900 font-black min-w-[50px]">Monthly Total</th></tr>`;
                     tableHeader.innerHTML = headerHtml;
 
                     tableBody.innerHTML = "";
@@ -904,7 +1035,6 @@
                             if (val === 0.01) cellText = "T";
                             else if (val !== "--") cellText = val;
 
-                            // Clicking a day cell jumps to Daily View for that date!
                             const formattedDay = String(d).padStart(2, '0');
                             const targetDateStr = `${data.year_month}-${formattedDay}`;
 
@@ -926,11 +1056,9 @@
         }
 
         function jumpToDailyDate(dateStr) {
-            if (dateStr > todayRainfallDateGlobal) return; // Prevent future dates
-            
+            if (dateStr > todayRainfallDateGlobal) return;
             const dateInput = document.getElementById("adminDatePicker");
             if (dateInput) dateInput.value = dateStr;
-            
             setAdminViewMode("daily");
         }
 
@@ -1002,7 +1130,6 @@
         function generateSinglePagePDF() {
             setText("printGeneratedTime", new Date().toUTCString());
             
-            // Apply Dynamic Print Media CSS
             const printStyleEl = document.getElementById("printStyleTag");
             if (adminViewMode === "monthly") {
                 printStyleEl.innerHTML = `
