@@ -134,21 +134,17 @@
             <!-- ACCUMULATIVE ENTRY CARD -->
             <div id="accumulativeEntryCard" class="hidden bg-purple-50/50 border-2 border-purple-400/30 p-4 rounded-2xl space-y-3">
                 <div class="bg-purple-100 text-purple-800 p-2.5 rounded-xl text-xs font-bold">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Multi-Slot Accumulative Reading (Divides rain equally across missed slots).
+                    <i class="fa-solid fa-circle-info mr-1"></i> Accumulative Reading: Merges earlier slots into the ending slot.
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <div>
                         <label class="block font-bold text-slate-500 mb-1">From Slot</label>
-                        <select id="accStartSlot" class="w-full p-2.5 border rounded-xl font-bold bg-white outline-none">
-                            <!-- Populated in JS -->
-                        </select>
+                        <select id="accStartSlot" class="w-full p-2.5 border rounded-xl font-bold bg-white outline-none"></select>
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-500 mb-1">To Slot</label>
-                        <select id="accEndSlot" class="w-full p-2.5 border rounded-xl font-bold bg-white outline-none">
-                            <!-- Populated in JS -->
-                        </select>
+                        <label class="block font-bold text-slate-500 mb-1">To Slot (Ends At)</label>
+                        <select id="accEndSlot" class="w-full p-2.5 border rounded-xl font-bold bg-white outline-none"></select>
                     </div>
                 </div>
 
@@ -412,7 +408,7 @@
             currentSelectedSlot = slot;
             document.getElementById("selectedSlotText").innerText = slot;
 
-            if (todayEntries.hasOwnProperty(slot)) {
+            if (todayEntries.hasOwnProperty(slot) && todayEntries[slot] !== "SEE_NEXT") {
                 document.getElementById("rainfallInput").value = todayEntries[slot];
             } else {
                 document.getElementById("rainfallInput").value = "";
@@ -463,20 +459,26 @@
                 const isLockedPast = (userRole === "WORKER" && idx < (currentSlotIdx - 1));
 
                 let displayVal = "--";
-                if (isFilled) displayVal = (rawVal === 0.01) ? "T (Trace)" : rawVal + "m";
+                if (isFilled) {
+                    if (rawVal === "SEE_NEXT") displayVal = "→ See next";
+                    else if (rawVal === 0.01) displayVal = "T (Trace)";
+                    else displayVal = rawVal + "m";
+                }
 
                 let cardClass = "p-3 rounded-2xl border transition flex justify-between items-center text-xs ";
                 
                 if (isFuture) cardClass += "bg-slate-100 border-slate-200 text-slate-300 opacity-60 cursor-not-allowed";
                 else if (isLockedPast) cardClass += "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed";
                 else if (isSelected) cardClass += "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30 cursor-pointer";
-                else if (isFilled) cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900 cursor-pointer hover:border-emerald-300";
-                else cardClass += "bg-slate-50 border-slate-200 text-slate-500 cursor-pointer hover:border-slate-300";
+                else if (isFilled) {
+                    if (rawVal === "SEE_NEXT") cardClass += "bg-purple-50 border-purple-200 text-purple-900 cursor-pointer";
+                    else cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900 cursor-pointer hover:border-emerald-300";
+                } else cardClass += "bg-slate-50 border-slate-200 text-slate-500 cursor-pointer hover:border-slate-300";
 
                 let badgeText = "Tap to Select";
                 if (isFuture) badgeText = "🔒 Future";
                 else if (isLockedPast) badgeText = "🔒 Locked";
-                else if (isFilled) badgeText = "✓ Recorded";
+                else if (isFilled) badgeText = (rawVal === "SEE_NEXT") ? "Merged" : "✓ Recorded";
                 else if (isSelected) badgeText = "Selected";
 
                 gridEl.innerHTML += `
@@ -487,7 +489,7 @@
                                 ${badgeText}
                             </span>
                         </div>
-                        <span class="font-black text-sm ${isSelected ? 'text-white' : (isFilled ? 'text-emerald-700' : 'text-slate-300')}">
+                        <span class="font-black text-sm ${isSelected ? 'text-white' : (isFilled ? (rawVal === 'SEE_NEXT' ? 'text-purple-700' : 'text-emerald-700') : 'text-slate-300')}">
                             ${displayVal}
                         </span>
                     </div>
@@ -555,9 +557,9 @@
             const statusMsg = document.getElementById("statusMsg");
             const accSubmitBtn = document.getElementById("accSubmitBtn");
 
-            if (startIdx > endIdx) {
+            if (startIdx >= endIdx) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "Start slot must be earlier than End slot!";
+                statusMsg.innerText = "Start slot must be EARLIER than End slot!";
                 return;
             }
 
@@ -567,37 +569,40 @@
                 return;
             }
 
-            const slotCount = (endIdx - startIdx) + 1;
-            const dividedRain = parseFloat((totalRain / slotCount).toFixed(2));
-
             accSubmitBtn.disabled = true;
-            accSubmitBtn.innerText = `Dividing ${totalRain}mm across ${slotCount} slots...`;
+            accSubmitBtn.innerText = `Merging slots...`;
 
-            for (let i = startIdx; i <= endIdx; i++) {
-                const targetSlot = ALL_SLOTS[i];
-                const payload = {
-                    timestamp: new Date().toISOString(),
-                    phone: phone,
-                    utc_slot: targetSlot,
-                    rainfall: dividedRain,
-                    is_accumulative: true
-                };
+            const payload = {
+                timestamp: new Date().toISOString(),
+                phone: phone,
+                start_slot_idx: startIdx,
+                end_slot_idx: endIdx,
+                rainfall: totalRain,
+                is_accumulative_merge: true
+            };
 
+            try {
                 await fetch(SCRIPT_URL, {
                     method: "POST",
                     mode: "no-cors",
                     headers: { "Content-Type": "text/plain" },
                     body: JSON.stringify(payload)
                 });
-            }
 
-            statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-purple-700 bg-purple-50 block";
-            statusMsg.innerText = `✅ Divided ${totalRain} mm (${dividedRain} mm/slot) across ${slotCount} slots!`;
-            
-            accSubmitBtn.disabled = false;
-            accSubmitBtn.innerText = "Save Accumulative Reading";
-            document.getElementById("accRainfallInput").value = "";
-            setTimeout(refreshTodayHistory, 1500);
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-purple-700 bg-purple-50 block";
+                statusMsg.innerText = `✅ Saved ${totalRain} mm accumulative reading! Merged into ending slot.`;
+                
+                accSubmitBtn.disabled = false;
+                accSubmitBtn.innerText = "Save Accumulative Reading";
+                document.getElementById("accRainfallInput").value = "";
+                setTimeout(refreshTodayHistory, 1500);
+
+            } catch (error) {
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
+                statusMsg.innerText = "❌ Network Error: " + error.message;
+                accSubmitBtn.disabled = false;
+                accSubmitBtn.innerText = "Save Accumulative Reading";
+            }
         }
 
 
@@ -625,6 +630,7 @@
 
                     for (let st in stationMap) {
                         const stData = stationMap[st] || {};
+                        const stSlots = stData.slots || {};
                         const stPhone = stData.phone || "";
                         const total = stData.total || 0;
 
@@ -632,10 +638,11 @@
 
                         ALL_SLOTS.forEach((slot, idx) => {
                             const isFuture = (idx > data.current_slot_idx);
-                            const val = stData.hasOwnProperty(slot) ? stData[slot] : "--";
+                            const val = stSlots.hasOwnProperty(slot) ? stSlots[slot] : "--";
                             
                             let displayCell = "--";
-                            if (val === 0.01) displayCell = "T";
+                            if (val === "SEE_NEXT") displayCell = "→ See next";
+                            else if (val === 0.01) displayCell = "T";
                             else if (val !== "--") displayCell = val;
 
                             if (isFuture) {
@@ -643,7 +650,7 @@
                             } else {
                                 const isClickable = (userRole === "ADMIN");
                                 rowHtml += `<td ${isClickable ? `onclick="openAdminModal('${stPhone}', '${st}', '${slot}', '${val !== '--' ? val : ''}')"` : ''} 
-                                                class="p-1 border ${isClickable ? 'cursor-pointer hover:bg-blue-100' : ''} font-bold ${val !== '--' ? 'text-blue-700 bg-blue-50/50' : 'text-slate-300'}">
+                                                class="p-1 border ${isClickable ? 'cursor-pointer hover:bg-blue-100' : ''} font-bold ${val === 'SEE_NEXT' ? 'text-purple-600 bg-purple-50' : (val !== '--' ? 'text-blue-700 bg-blue-50/50' : 'text-slate-300')}">
                                                 ${displayCell}
                                             </td>`;
                             }
@@ -667,7 +674,7 @@
 
             document.getElementById("modalStation").innerText = station;
             document.getElementById("modalSlot").innerText = slot;
-            document.getElementById("modalInput").value = currentVal === "0.01" ? "0.01" : currentVal;
+            document.getElementById("modalInput").value = (currentVal === "0.01" || currentVal === "SEE_NEXT") ? "0.01" : currentVal;
             document.getElementById("modalMsg").classList.add("hidden");
             document.getElementById("adminModal").classList.remove("hidden");
         }
