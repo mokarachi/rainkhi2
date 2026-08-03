@@ -281,6 +281,12 @@
         let modalTargetStation = "";
         let modalTargetSlot = "";
 
+        // SAFE DOM HELPER FUNCTION (Prevents null property errors)
+        function setText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        }
+
         function getRecentUTCSlot() {
             const now = new Date();
             const totalMins = now.getUTCHours() * 60 + now.getUTCMinutes();
@@ -301,8 +307,10 @@
             const loginBtn = document.getElementById("loginBtn");
 
             if (!phone) {
-                errorEl.innerText = "Please enter a mobile number.";
-                errorEl.classList.remove("hidden");
+                if (errorEl) {
+                    errorEl.innerText = "Please enter a mobile number.";
+                    errorEl.classList.remove("hidden");
+                }
                 return;
             }
 
@@ -325,16 +333,20 @@
                     localStorage.setItem("worker_phone", phone);
                     userRole = data.role;
                     stationName = data.station;
-                    errorEl.classList.add("hidden");
+                    if (errorEl) errorEl.classList.add("hidden");
                     showDashboard();
                 } else {
                     localStorage.removeItem("worker_phone");
-                    errorEl.innerText = "❌ " + data.message;
-                    errorEl.classList.remove("hidden");
+                    if (errorEl) {
+                        errorEl.innerText = "❌ " + data.message;
+                        errorEl.classList.remove("hidden");
+                    }
                 }
             } catch (err) {
-                errorEl.innerText = "❌ Connection Error. Check internet or URL.";
-                errorEl.classList.remove("hidden");
+                if (errorEl) {
+                    errorEl.innerText = "❌ Connection Error. Check internet or URL.";
+                    errorEl.classList.remove("hidden");
+                }
             }
         }
 
@@ -347,16 +359,16 @@
                 document.getElementById("mainContainer").classList.replace("max-w-xl", "max-w-4xl");
                 
                 if (userRole === "SILENT_ADMIN") {
-                    document.getElementById("adminSubHeading").innerText = "Silent Observer Admin (View-Only Mode)";
+                    setText("adminSubHeading", "Silent Observer Admin (View-Only Mode)");
                 } else {
-                    document.getElementById("adminSubHeading").innerText = "Tap Any Cell in Table to Amend Reading";
+                    setText("adminSubHeading", "Tap Any Cell in Table to Amend Reading");
                 }
                 loadAdminMasterSummary();
             } else {
                 document.getElementById("dataForm").classList.remove("hidden");
                 document.getElementById("adminDashboard").classList.add("hidden");
                 document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
-                document.getElementById("displayStation").innerText = stationName;
+                setText("displayStation", stationName);
                 
                 populateAccumulativeSelects();
                 selectSlot(getRecentUTCSlot());
@@ -389,6 +401,8 @@
         function populateAccumulativeSelects() {
             const startSelect = document.getElementById("accStartSlot");
             const endSelect = document.getElementById("accEndSlot");
+            if (!startSelect || !endSelect) return;
+
             startSelect.innerHTML = "";
             endSelect.innerHTML = "";
 
@@ -406,7 +420,7 @@
 
         function selectSlot(slot) {
             currentSelectedSlot = slot;
-            document.getElementById("selectedSlotText").innerText = slot;
+            setText("selectedSlotText", slot);
 
             if (todayEntries.hasOwnProperty(slot) && todayEntries[slot] !== "SEE_NEXT") {
                 document.getElementById("rainfallInput").value = todayEntries[slot];
@@ -415,7 +429,7 @@
             }
 
             const edits = editCounts[slot] || 0;
-            document.getElementById("editCountBadge").innerText = `Slot Updates Used: ${edits} / 3`;
+            setText("editCountBadge", `Slot Updates Used: ${edits} / 3`);
 
             renderSlotsGrid();
         }
@@ -432,11 +446,11 @@
                     editCounts = data.edit_counts || {};
                     currentSlotIdx = data.current_slot_idx;
 
-                    document.getElementById("summaryTotalRain").innerText = data.total_mm.toFixed(1);
-                    document.getElementById("displayDateText").innerText = data.rainfall_date;
+                    setText("summaryTotalRain", data.total_mm.toFixed(1));
+                    setText("displayDateText", data.rainfall_date);
 
                     let completedCount = Object.keys(todayEntries).length;
-                    document.getElementById("summaryProgress").innerText = `${completedCount} / 8`;
+                    setText("summaryProgress", `${completedCount} / 8`);
 
                     populateAccumulativeSelects();
                     renderSlotsGrid();
@@ -448,6 +462,7 @@
 
         function renderSlotsGrid() {
             const gridEl = document.getElementById("slotsGrid");
+            if (!gridEl) return;
             gridEl.innerHTML = "";
 
             ALL_SLOTS.forEach((slot, idx) => {
@@ -505,20 +520,20 @@
 
             if (!currentSelectedSlot) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "Please tap an active slot above!";
+                setText("statusMsg", "Please tap an active slot above!");
                 return;
             }
 
             if (rainfall === "" || rainfall < 0 || rainfall > 300) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "Please enter a valid rain amount or click 'Set Trace'.";
+                setText("statusMsg", "Please enter a valid rain amount or click 'Set Trace'.");
                 return;
             }
 
             submitBtn.disabled = true;
             submitBtn.innerText = "Saving Reading...";
             statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-blue-600 bg-blue-50 block";
-            statusMsg.innerText = "Connecting to Server...";
+            setText("statusMsg", "Connecting to Server...");
 
             const payload = {
                 timestamp: new Date().toISOString(),
@@ -536,13 +551,14 @@
                 });
 
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-emerald-700 bg-emerald-50 block";
-                statusMsg.innerText = `✅ Saved ${rainfall === "0.01" ? "Trace (T)" : rainfall + " mm"} for [${currentSelectedSlot}]!`;
+                setText("statusMsg", `✅ Saved ${rainfall === "0.01" ? "Trace (T)" : rainfall + " mm"} for [${currentSelectedSlot}]!`);
+                document.getElementById("rainfallInput").value = "";
                 
                 setTimeout(refreshTodayHistory, 1000);
 
             } catch (error) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "❌ Network Error: " + error.message;
+                setText("statusMsg", "❌ Network Error: " + error.message);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Save Reading";
@@ -559,13 +575,13 @@
 
             if (startIdx >= endIdx) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "Start slot must be EARLIER than End slot!";
+                setText("statusMsg", "Start slot must be EARLIER than End slot!");
                 return;
             }
 
             if (isNaN(totalRain) || totalRain < 0 || totalRain > 300) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "Please enter a valid accumulated rain amount.";
+                setText("statusMsg", "Please enter a valid accumulated rain amount.");
                 return;
             }
 
@@ -590,7 +606,7 @@
                 });
 
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-purple-700 bg-purple-50 block";
-                statusMsg.innerText = `✅ Saved ${totalRain} mm accumulative reading! Merged into ending slot.`;
+                setText("statusMsg", `✅ Saved ${totalRain} mm accumulative reading! Merged into ending slot.`);
                 
                 accSubmitBtn.disabled = false;
                 accSubmitBtn.innerText = "Save Accumulative Reading";
@@ -599,7 +615,7 @@
 
             } catch (error) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
-                statusMsg.innerText = "❌ Network Error: " + error.message;
+                setText("statusMsg", "❌ Network Error: " + error.message);
                 accSubmitBtn.disabled = false;
                 accSubmitBtn.innerText = "Save Accumulative Reading";
             }
@@ -609,6 +625,7 @@
         // ================= MASTER ADMIN LOGIC =================
         async function loadAdminMasterSummary() {
             const tableBody = document.getElementById("adminTableBody");
+            if (!tableBody) return;
             tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-slate-400 font-bold">Loading Real-Time Matrix...</td></tr>`;
 
             const phone = localStorage.getItem("worker_phone") || "0000";
@@ -621,8 +638,8 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
-                    document.getElementById("adminDateText").innerText = data.rainfall_date;
-                    document.getElementById("adminPrintDate").innerText = data.rainfall_date;
+                    setText("adminDateText", data.rainfall_date);
+                    setText("adminPrintDate", data.rainfall_date);
                     if (dateInput && !dateInput.value) {
                         dateInput.value = data.rainfall_date;
                     }
@@ -679,8 +696,8 @@
             modalTargetStation = station;
             modalTargetSlot = slot;
 
-            document.getElementById("modalStation").innerText = station;
-            document.getElementById("modalSlot").innerText = slot;
+            setText("modalStation", station);
+            setText("modalSlot", slot);
             document.getElementById("modalInput").value = (currentVal === "0.01" || currentVal === "SEE_NEXT") ? "0.01" : currentVal;
             document.getElementById("modalMsg").classList.add("hidden");
             document.getElementById("adminModal").classList.remove("hidden");
@@ -702,7 +719,7 @@
 
             if (val === "" || val < 0 || val > 300) {
                 modalMsg.className = "text-xs font-bold text-center text-red-600 block";
-                modalMsg.innerText = "Please enter a valid rain amount or set Trace.";
+                setText("modalMsg", "Please enter a valid rain amount or set Trace.");
                 return;
             }
 
@@ -730,7 +747,7 @@
                 setTimeout(loadAdminMasterSummary, 1000);
             } catch (err) {
                 modalMsg.className = "text-xs font-bold text-center text-red-600 block";
-                modalMsg.innerText = "Error saving amendment.";
+                setText("modalMsg", "Error saving amendment.");
             } finally {
                 modalSaveBtn.disabled = false;
                 modalSaveBtn.innerText = "Save Amendment";
@@ -738,7 +755,7 @@
         }
 
         function generateSinglePagePDF() {
-            document.getElementById("printGeneratedTime").innerText = new Date().toUTCString();
+            setText("printGeneratedTime", new Date().toUTCString());
             window.print();
         }
     </script>
