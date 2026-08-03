@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -613,18 +611,20 @@
             const tableBody = document.getElementById("adminTableBody");
             tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-slate-400 font-bold">Loading Real-Time Matrix...</td></tr>`;
 
-            const phone = localStorage.getItem("worker_phone");
-            const targetDate = document.getElementById("adminDatePicker").value || "";
+            const phone = localStorage.getItem("worker_phone") || "0000";
+            const dateInput = document.getElementById("adminDatePicker");
+            const targetDate = dateInput ? dateInput.value : "";
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=get_admin_data&phone=${encodeURIComponent(phone)}&target_date=${encodeURIComponent(targetDate)}`);
+                const reqUrl = `${SCRIPT_URL}?action=get_admin_data&phone=${encodeURIComponent(phone)}&target_date=${encodeURIComponent(targetDate)}`;
+                const response = await fetch(reqUrl);
                 const data = await response.json();
 
                 if (data.status === "success") {
                     document.getElementById("adminDateText").innerText = data.rainfall_date;
                     document.getElementById("adminPrintDate").innerText = data.rainfall_date;
-                    if (!document.getElementById("adminDatePicker").value) {
-                        document.getElementById("adminDatePicker").value = data.rainfall_date;
+                    if (dateInput && !dateInput.value) {
+                        dateInput.value = data.rainfall_date;
                     }
 
                     const stationMap = data.stations || {};
@@ -651,7 +651,10 @@
                                 rowHtml += `<td class="p-1 border bg-slate-100 text-slate-300">🔒</td>`;
                             } else {
                                 const isClickable = (userRole === "ADMIN");
-                                rowHtml += `<td ${isClickable ? `onclick="openAdminModal('${stPhone}', '${st}', '${slot}', '${val !== '--' ? val : ''}')"` : ''} 
+                                const safeSt = st.replace(/'/g, "\\'");
+                                const safeVal = (val !== '--') ? String(val).replace(/'/g, "\\'") : '';
+
+                                rowHtml += `<td ${isClickable ? `onclick="openAdminModal('${stPhone}', '${safeSt}', '${slot}', '${safeVal}')"` : ''} 
                                                 class="p-1 border ${isClickable ? 'cursor-pointer hover:bg-blue-100' : ''} font-bold ${val === 'SEE_NEXT' ? 'text-purple-600 bg-purple-50' : (val !== '--' ? 'text-blue-700 bg-blue-50/50' : 'text-slate-300')}">
                                                 ${displayCell}
                                             </td>`;
@@ -662,10 +665,10 @@
                         tableBody.innerHTML += rowHtml;
                     }
                 } else {
-                    tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold">Admin Load Failed: ${data.message || 'Unknown Server Error'}</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Admin Fetch Failed: ${data.message || 'Unknown Server Error'}</td></tr>`;
                 }
             } catch (err) {
-                tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold">Failed to load admin summary. Error: ${err.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Network/JS Error: ${err.message}</td></tr>`;
             }
         }
 
