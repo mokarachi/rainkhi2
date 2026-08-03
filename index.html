@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +57,6 @@
         <!-- WORKER & MASTER WORKER DASHBOARD -->
         <div id="dataForm" class="hidden space-y-2.5 no-print">
             
-            <!-- MASTER WORKER VIEW MODE TOGGLE -->
             <div id="masterWorkerSection" class="hidden bg-purple-50 border border-purple-200 p-2 rounded-xl space-y-2">
                 <div class="flex bg-purple-100 p-0.5 rounded-lg text-[11px] font-bold text-center">
                     <button onclick="setMasterViewMode('station_wise')" id="masterModeStationBtn" class="w-1/2 py-1 rounded-md bg-white text-purple-900 shadow-sm">
@@ -75,7 +75,6 @@
                 </div>
             </div>
 
-            <!-- UNIFIED TOP SUMMARY BANNER -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-3 text-white shadow-md flex items-center justify-between">
                 <div class="space-y-0.5">
                     <div class="flex items-center gap-1.5">
@@ -131,7 +130,7 @@
                             
                             <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs bg-blue-100 px-2 py-0.5 rounded-md">--</span>
                             
-                            <!-- NEXT SLOT ARROW ▶ (Auto-disables if at current slot) -->
+                            <!-- NEXT SLOT ARROW ▶ -->
                             <button onclick="shiftSelectedSlot(1)" id="nextSlotBtn" title="Next Slot"
                                     class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-md text-xs transition">
                                 <i class="fa-solid fa-chevron-right"></i>
@@ -221,16 +220,19 @@
                 </button>
             </div>
 
-            <!-- ADMIN 3-WAY VIEW TOGGLE (DAILY | MONTHLY | ACTIVITY LOG) -->
-            <div class="flex bg-slate-100 p-0.5 rounded-xl text-xs font-bold text-center no-print">
-                <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
-                    <i class="fa-solid fa-calendar-day mr-1"></i> Daily
+            <!-- ADMIN 4-WAY VIEW TOGGLE (DAILY | MONTHLY | ACTIVITY LOG | SYSTEM USERS) -->
+            <div class="flex bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold text-center no-print">
+                <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
+                    <i class="fa-solid fa-calendar-day mr-0.5"></i> Daily
                 </button>
-                <button onclick="setAdminViewMode('monthly')" id="adminModeMonthlyBtn" class="w-1/3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
-                    <i class="fa-solid fa-calendar-days mr-1"></i> Monthly
+                <button onclick="setAdminViewMode('monthly')" id="adminModeMonthlyBtn" class="w-1/4 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-calendar-days mr-0.5"></i> Monthly
                 </button>
-                <button onclick="setAdminViewMode('logs')" id="adminModeLogsBtn" class="w-1/3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
-                    <i class="fa-solid fa-list-check mr-1"></i> Activity Log
+                <button onclick="setAdminViewMode('logs')" id="adminModeLogsBtn" class="w-1/4 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-list-check mr-0.5"></i> Audit Log
+                </button>
+                <button onclick="setAdminViewMode('users')" id="adminModeUsersBtn" class="w-1/4 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-users mr-0.5"></i> Users
                 </button>
             </div>
 
@@ -275,6 +277,14 @@
                 <span class="text-xs font-extrabold text-amber-900"><i class="fa-solid fa-shield-halved mr-1"></i> User Activity Audit Trail (Full Admin Only)</span>
                 <button onclick="loadAdminActivityLogs()" class="text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 px-3 py-1 rounded-xl transition">
                     <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Logs
+                </button>
+            </div>
+
+            <!-- USERS STATUS CONTROLS -->
+            <div id="adminUsersControls" class="hidden flex justify-between items-center bg-emerald-50 p-2.5 rounded-2xl no-print">
+                <span class="text-xs font-extrabold text-emerald-900"><i class="fa-solid fa-users mr-1"></i> System Members Login Status Overview</span>
+                <button onclick="loadAdminSystemUsers()" class="text-xs font-bold bg-emerald-100 text-emerald-900 hover:bg-emerald-200 px-3 py-1 rounded-xl transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Status
                 </button>
             </div>
 
@@ -327,6 +337,22 @@
                         </tr>
                     </thead>
                     <tbody id="adminLogsTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- SYSTEM USERS LOGIN STATUS TABLE -->
+            <div id="adminUsersTableContainer" class="hidden overflow-x-auto">
+                <table id="adminUsersTable" class="w-full text-[10px] text-left border-collapse">
+                    <thead>
+                        <tr class="bg-emerald-100/70 text-emerald-900 font-bold">
+                            <th class="p-2 border">Name / Station</th>
+                            <th class="p-2 border">Phone Number</th>
+                            <th class="p-2 border text-center">User Role</th>
+                            <th class="p-2 border text-center">Status</th>
+                            <th class="p-2 border">Last Login (UTC)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminUsersTableBody"></tbody>
                 </table>
             </div>
 
@@ -390,7 +416,7 @@
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
         let todayRainfallDateGlobal = "";
-        let adminViewMode = "daily"; // 'daily', 'monthly', or 'logs'
+        let adminViewMode = "daily"; // 'daily', 'monthly', 'logs', 'users'
 
         let masterStationsList = [];
         let selectedMasterTargetPhone = "";
@@ -480,7 +506,7 @@
                 const logsBtn = document.getElementById("adminModeLogsBtn");
                 if (logsBtn) {
                     if (userRole === "ADMIN") logsBtn.classList.remove("hidden");
-                    else logsBtn.classList.add("hidden"); // Hide Activity Logs tab for Silent Admin
+                    else logsBtn.classList.add("hidden");
                 }
                 
                 if (userRole === "SILENT_ADMIN") {
@@ -526,38 +552,44 @@
             const dailyCtrl = document.getElementById("adminDailyControls");
             const monthlyCtrl = document.getElementById("adminMonthlyControls");
             const logsCtrl = document.getElementById("adminLogsControls");
+            const usersCtrl = document.getElementById("adminUsersControls");
             
             const dailyTable = document.getElementById("adminDailyTableContainer");
             const monthlyTable = document.getElementById("adminMonthlyTableContainer");
             const logsTable = document.getElementById("adminLogsTableContainer");
+            const usersTable = document.getElementById("adminUsersTableContainer");
 
             const dailyBtn = document.getElementById("adminModeDailyBtn");
             const monthlyBtn = document.getElementById("adminModeMonthlyBtn");
             const logsBtn = document.getElementById("adminModeLogsBtn");
+            const usersBtn = document.getElementById("adminModeUsersBtn");
 
             // Reset classes
             dailyCtrl.classList.add("hidden");
             monthlyCtrl.classList.add("hidden");
             logsCtrl.classList.add("hidden");
+            usersCtrl.classList.add("hidden");
             
             dailyTable.classList.add("hidden");
             monthlyTable.classList.add("hidden");
             logsTable.classList.add("hidden");
+            usersTable.classList.add("hidden");
 
-            dailyBtn.className = "w-1/3 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
-            monthlyBtn.className = "w-1/3 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
-            if (logsBtn) logsBtn.className = "w-1/3 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+            dailyBtn.className = "w-1/4 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+            monthlyBtn.className = "w-1/4 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+            if (logsBtn) logsBtn.className = "w-1/4 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+            if (usersBtn) usersBtn.className = "w-1/4 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
 
             if (mode === 'daily') {
                 dailyCtrl.classList.remove("hidden");
                 dailyTable.classList.remove("hidden");
-                dailyBtn.className = "w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600 font-bold";
+                dailyBtn.className = "w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-blue-600 font-bold";
                 document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-4xl border border-slate-200";
                 loadAdminMasterSummary();
             } else if (mode === 'monthly') {
                 monthlyCtrl.classList.remove("hidden");
                 monthlyTable.classList.remove("hidden");
-                monthlyBtn.className = "w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-purple-600 font-bold";
+                monthlyBtn.className = "w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-purple-600 font-bold";
                 document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-7xl border border-slate-200";
 
                 const monthInput = document.getElementById("adminMonthPicker");
@@ -569,20 +601,25 @@
             } else if (mode === 'logs' && userRole === 'ADMIN') {
                 logsCtrl.classList.remove("hidden");
                 logsTable.classList.remove("hidden");
-                if (logsBtn) logsBtn.className = "w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-amber-700 font-bold";
+                if (logsBtn) logsBtn.className = "w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-amber-700 font-bold";
                 document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-5xl border border-slate-200";
                 loadAdminActivityLogs();
+            } else if (mode === 'users') {
+                usersCtrl.classList.remove("hidden");
+                usersTable.classList.remove("hidden");
+                if (usersBtn) usersBtn.className = "w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-emerald-700 font-bold";
+                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-4xl border border-slate-200";
+                loadAdminSystemUsers();
             }
         }
 
-        // WORKER SLOT SHIFT ARROWS (◀ / ▶)
         function shiftSelectedSlot(offset) {
             let currentIdx = ALL_SLOTS.indexOf(currentSelectedSlot);
             if (currentIdx === -1) currentIdx = currentSlotIdx;
 
             let targetIdx = currentIdx + offset;
 
-            if (targetIdx < 0 || targetIdx > currentSlotIdx) return; // Prevent out of bounds or future slots
+            if (targetIdx < 0 || targetIdx > currentSlotIdx) return;
 
             selectSlot(ALL_SLOTS[targetIdx]);
         }
@@ -1191,7 +1228,6 @@
             }
         }
 
-        // LOAD USER ACTIVITY LOGS (FULL ADMIN ONLY)
         async function loadAdminActivityLogs() {
             const tableBody = document.getElementById("adminLogsTableBody");
             if (!tableBody) return;
@@ -1236,6 +1272,51 @@
                 }
             } catch (err) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Network Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        async function loadAdminSystemUsers() {
+            const tableBody = document.getElementById("adminUsersTableBody");
+            if (!tableBody) return;
+            tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-slate-400 font-bold text-center">Loading System Members Status...</td></tr>`;
+
+            const phone = localStorage.getItem("worker_phone") || "0000";
+
+            try {
+                const reqUrl = `${SCRIPT_URL}?action=get_system_users&phone=${encodeURIComponent(phone)}`;
+                const response = await fetch(reqUrl);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    const userList = data.users || [];
+                    tableBody.innerHTML = "";
+
+                    userList.forEach(u => {
+                        let roleClass = "bg-slate-100 text-slate-700";
+                        if (u.role === "ADMIN") roleClass = "bg-red-100 text-red-800";
+                        else if (u.role === "SILENT_ADMIN") roleClass = "bg-indigo-100 text-indigo-800";
+                        else if (u.role === "MASTER_WORKER") roleClass = "bg-purple-100 text-purple-800";
+                        else if (u.role === "WORKER") roleClass = "bg-blue-100 text-blue-800";
+
+                        const statusBadge = u.is_logged_in 
+                            ? `<span class="px-2 py-0.5 rounded-full font-extrabold text-[9px] bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle text-[7px] text-emerald-500 mr-1 animate-pulse"></i> Active / Logged In</span>`
+                            : `<span class="px-2 py-0.5 rounded-full font-bold text-[9px] bg-slate-100 text-slate-400">⚪ Never Logged In</span>`;
+
+                        tableBody.innerHTML += `
+                            <tr class="hover:bg-slate-50 border-b">
+                                <td class="p-2 border font-extrabold text-slate-800">${u.name}</td>
+                                <td class="p-2 border font-mono font-bold text-slate-600">${u.phone}</td>
+                                <td class="p-2 border text-center"><span class="px-2 py-0.5 rounded font-black text-[9px] ${roleClass}">${u.role}</span></td>
+                                <td class="p-2 border text-center">${statusBadge}</td>
+                                <td class="p-2 border text-[10px] font-mono text-slate-500">${u.last_login.substring(0, 19).replace('T', ' ')}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Users Fetch Failed: ${data.message}</td></tr>`;
+                }
+            } catch (err) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Network Error: ${err.message}</td></tr>`;
             }
         }
 
