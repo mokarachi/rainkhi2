@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,7 +95,7 @@
                 <div id="slotsGrid" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- MODE SWITCH (SINGLE vs ACCUMULATIVE) -->
+            <!-- MODE SWITCH -->
             <div class="flex bg-slate-100 p-1 rounded-2xl text-xs font-bold text-center">
                 <button onclick="setMode('single')" id="modeSingleBtn" class="w-1/2 py-2 rounded-xl bg-white shadow-sm text-blue-600">
                     Single Slot Entry
@@ -134,7 +136,7 @@
             <!-- ACCUMULATIVE ENTRY CARD -->
             <div id="accumulativeEntryCard" class="hidden bg-purple-50/50 border-2 border-purple-400/30 p-4 rounded-2xl space-y-3">
                 <div class="bg-purple-100 text-purple-800 p-2.5 rounded-xl text-xs font-bold">
-                    <i class="fa-solid fa-circle-info mr-1"></i> Accumulative Reading: Merges earlier slots into the ending slot.
+                    <i class="fa-solid fa-circle-info mr-1"></i> Accumulative Reading: Merges earlier slots into ending slot.
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 text-xs">
@@ -659,9 +661,11 @@
                         rowHtml += `<td class="p-2 border font-black bg-blue-50 text-blue-900">${total > 0 ? total + ' mm' : '0.0'}</td></tr>`;
                         tableBody.innerHTML += rowHtml;
                     }
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold">Admin Load Failed: ${data.message || 'Unknown Server Error'}</td></tr>`;
                 }
             } catch (err) {
-                tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold">Failed to load admin summary.</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold">Failed to load admin summary. Error: ${err.message}</td></tr>`;
             }
         }
 
