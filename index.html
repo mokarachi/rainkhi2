@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +9,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- LEAFLET.JS FOR GEOGRAPHICAL MAP -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style id="printStyleTag">
         @media print {
             body { background: white !important; padding: 0 !important; font-size: 10px !important; }
@@ -95,7 +100,7 @@
                 </div>
             </div>
 
-            <!-- STATION-WISE CONTAINER -->
+            <!-- WORKER STATION-WISE CONTAINER -->
             <div id="workerStationWiseContainer" class="space-y-2.5">
                 <div>
                     <div class="flex justify-between items-center mb-1">
@@ -116,13 +121,11 @@
                     </button>
                 </div>
 
-                <!-- SINGLE ENTRY CARD (WITH SLOT ARROWS ◀ ▶) -->
                 <div id="singleEntryCard" class="bg-blue-50/40 border border-blue-200 p-2.5 rounded-2xl space-y-2">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-1.5">
                             <span class="text-[10px] font-black uppercase text-blue-700">Slot:</span>
                             
-                            <!-- PREVIOUS SLOT ARROW ◀ -->
                             <button onclick="shiftSelectedSlot(-1)" title="Previous Slot"
                                     class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-md text-xs transition">
                                 <i class="fa-solid fa-chevron-left"></i>
@@ -130,7 +133,6 @@
                             
                             <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs bg-blue-100 px-2 py-0.5 rounded-md">--</span>
                             
-                            <!-- NEXT SLOT ARROW ▶ -->
                             <button onclick="shiftSelectedSlot(1)" id="nextSlotBtn" title="Next Slot"
                                     class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-md text-xs transition">
                                 <i class="fa-solid fa-chevron-right"></i>
@@ -207,7 +209,7 @@
         </div>
 
 
-        <!-- MASTER ADMIN DASHBOARD -->
+        <!-- ================= MASTER ADMIN DASHBOARD ================= -->
         <div id="adminDashboard" class="hidden space-y-3">
             
             <div class="flex justify-between items-center border-b pb-2.5 no-print">
@@ -220,7 +222,7 @@
                 </button>
             </div>
 
-            <!-- ADMIN 4-WAY VIEW TOGGLE (DAILY | MONTHLY | ACTIVITY LOG | SYSTEM USERS) -->
+            <!-- ADMIN 4-WAY VIEW TOGGLE -->
             <div class="flex bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold text-center no-print">
                 <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
                     <i class="fa-solid fa-calendar-day mr-0.5"></i> Daily
@@ -236,7 +238,7 @@
                 </button>
             </div>
 
-            <!-- DAILY CONTROLS -->
+            <!-- DAILY CONTROLS WITH MAP TOGGLE BUTTON 🌐 -->
             <div id="adminDailyControls" class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1 text-xs font-bold text-blue-900">
                     <span>Date:</span>
@@ -252,13 +254,21 @@
                     </button>
                 </div>
 
-                <button onclick="generateSinglePagePDF()" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1">
-                    <i class="fa-solid fa-file-pdf"></i> Print 1-Page PDF
-                </button>
+                <div class="flex items-center gap-2">
+                    <!-- GLOBE MAP TOGGLE BUTTON -->
+                    <button onclick="toggleMapTableMode()" id="mapToggleBtnDaily" 
+                            class="bg-white border border-blue-200 text-blue-900 hover:bg-blue-100 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-globe text-blue-600"></i> <span id="mapToggleTextDaily">Map View</span>
+                    </button>
+
+                    <button onclick="generateSinglePagePDF()" 
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1">
+                        <i class="fa-solid fa-file-pdf"></i> Print 1-Page PDF
+                    </button>
+                </div>
             </div>
 
-            <!-- MONTHLY CONTROLS -->
+            <!-- MONTHLY CONTROLS WITH MAP TOGGLE BUTTON 🌐 -->
             <div id="adminMonthlyControls" class="hidden flex flex-wrap justify-between items-center gap-2 bg-purple-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-purple-900">
                     <span>Select Month:</span>
@@ -266,10 +276,18 @@
                            class="bg-white border border-purple-200 text-purple-900 font-bold px-2.5 py-1 rounded-xl outline-none text-xs">
                 </div>
 
-                <button onclick="generateSinglePagePDF()" 
-                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1">
-                    <i class="fa-solid fa-file-pdf"></i> Print 1-Page Landscape PDF
-                </button>
+                <div class="flex items-center gap-2">
+                    <!-- GLOBE MAP TOGGLE BUTTON -->
+                    <button onclick="toggleMapTableMode()" id="mapToggleBtnMonthly" 
+                            class="bg-white border border-purple-200 text-purple-900 hover:bg-purple-100 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-globe text-purple-600"></i> <span id="mapToggleTextMonthly">Map View</span>
+                    </button>
+
+                    <button onclick="generateSinglePagePDF()" 
+                            class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1">
+                        <i class="fa-solid fa-file-pdf"></i> Print 1-Page Landscape PDF
+                    </button>
+                </div>
             </div>
 
             <!-- LOGS CONTROLS -->
@@ -293,6 +311,9 @@
                 <h2 style="font-size: 15px; font-weight: bold;" id="printHeaderTitle">MONSOON RAINFALL SUMMARY REPORT</h2>
                 <p style="font-size: 10px;" id="printHeaderSubtitle">Meteorological Rainfall Date: <span id="adminPrintDate">--</span></p>
             </div>
+
+            <!-- GEOGRAPHICAL GIS MAP CONTAINER (TOGGLEABLE) -->
+            <div id="adminMapContainer" class="hidden h-[420px] w-full rounded-2xl border border-slate-200 shadow-inner overflow-hidden z-10"></div>
 
             <!-- DAILY MATRIX TABLE -->
             <div id="adminDailyTableContainer" class="overflow-x-auto">
@@ -416,7 +437,12 @@
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
         let todayRainfallDateGlobal = "";
-        let adminViewMode = "daily"; // 'daily', 'monthly', 'logs', 'users'
+        let adminViewMode = "daily";
+
+        let isMapMode = false;
+        let leafletMap = null;
+        let mapMarkersLayerGroup = null;
+        let currentAdminDataCache = null;
 
         let masterStationsList = [];
         let selectedMasterTargetPhone = "";
@@ -548,6 +574,7 @@
 
         function setAdminViewMode(mode) {
             adminViewMode = mode;
+            isMapMode = false; // Reset map mode when switching views
             
             const dailyCtrl = document.getElementById("adminDailyControls");
             const monthlyCtrl = document.getElementById("adminMonthlyControls");
@@ -558,13 +585,14 @@
             const monthlyTable = document.getElementById("adminMonthlyTableContainer");
             const logsTable = document.getElementById("adminLogsTableContainer");
             const usersTable = document.getElementById("adminUsersTableContainer");
+            const mapContainer = document.getElementById("adminMapContainer");
 
             const dailyBtn = document.getElementById("adminModeDailyBtn");
             const monthlyBtn = document.getElementById("adminModeMonthlyBtn");
             const logsBtn = document.getElementById("adminModeLogsBtn");
             const usersBtn = document.getElementById("adminModeUsersBtn");
 
-            // Reset classes
+            // Hide all containers
             dailyCtrl.classList.add("hidden");
             monthlyCtrl.classList.add("hidden");
             logsCtrl.classList.add("hidden");
@@ -574,6 +602,9 @@
             monthlyTable.classList.add("hidden");
             logsTable.classList.add("hidden");
             usersTable.classList.add("hidden");
+            mapContainer.classList.add("hidden");
+
+            updateMapToggleButtonText();
 
             dailyBtn.className = "w-1/4 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
             monthlyBtn.className = "w-1/4 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
@@ -610,6 +641,122 @@
                 if (usersBtn) usersBtn.className = "w-1/4 py-1.5 rounded-lg bg-white shadow-sm text-emerald-700 font-bold";
                 document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-4xl border border-slate-200";
                 loadAdminSystemUsers();
+            }
+        }
+
+        // TOGGLE BETWEEN TABLE AND GEOGRAPHICAL MAP VIEW 🌐
+        function toggleMapTableMode() {
+            isMapMode = !isMapMode;
+
+            const mapContainer = document.getElementById("adminMapContainer");
+            const dailyTable = document.getElementById("adminDailyTableContainer");
+            const monthlyTable = document.getElementById("adminMonthlyTableContainer");
+
+            if (isMapMode) {
+                dailyTable.classList.add("hidden");
+                monthlyTable.classList.add("hidden");
+                mapContainer.classList.remove("hidden");
+
+                initOrUpdateLeafletMap();
+            } else {
+                mapContainer.classList.add("hidden");
+                if (adminViewMode === "daily") dailyTable.classList.remove("hidden");
+                else if (adminViewMode === "monthly") monthlyTable.classList.remove("hidden");
+            }
+
+            updateMapToggleButtonText();
+        }
+
+        function updateMapToggleButtonText() {
+            const dailyText = document.getElementById("mapToggleTextDaily");
+            const monthlyText = document.getElementById("mapToggleTextMonthly");
+
+            const label = isMapMode ? "Table View" : "Map View";
+            const icon = isMapMode ? "fa-table-cells" : "fa-globe";
+
+            if (dailyText) {
+                dailyText.innerHTML = `<i class="fa-solid ${icon}"></i> ${label}`;
+            }
+            if (monthlyText) {
+                monthlyText.innerHTML = `<i class="fa-solid ${icon}"></i> ${label}`;
+            }
+        }
+
+        // INITIALIZE AND RENDER INTERACTIVE LEAFLET GIS MAP 🗺️
+        function initOrUpdateLeafletMap() {
+            const mapContainer = document.getElementById("adminMapContainer");
+            if (!mapContainer) return;
+
+            if (!leafletMap) {
+                // Centered on Pakistan region (Lat: 30.3753, Lon: 69.3451)
+                leafletMap = L.map('adminMapContainer').setView([30.3753, 69.3451], 5);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(leafletMap);
+
+                mapMarkersLayerGroup = L.layerGroup().addTo(leafletMap);
+            }
+
+            setTimeout(() => {
+                leafletMap.invalidateSize(); // Forces map tiles to recalculate container bounds
+            }, 200);
+
+            renderMapMarkers();
+        }
+
+        function renderMapMarkers() {
+            if (!leafletMap || !mapMarkersLayerGroup || !currentAdminDataCache) return;
+
+            mapMarkersLayerGroup.clearLayers();
+            const stationMap = currentAdminDataCache.stations || {};
+
+            for (let st in stationMap) {
+                const stData = stationMap[st] || {};
+                const lat = parseFloat(stData.lat) || 30.3753;
+                const lon = parseFloat(stData.lon) || 69.3451;
+
+                let rainfallAmount = 0;
+                let popupDetails = "";
+
+                if (adminViewMode === "daily") {
+                    rainfallAmount = parseFloat(stData.total) || 0;
+                    popupDetails = `<b>Station:</b> ${st}<br><b>Daily Total:</b> ${rainfallAmount.toFixed(1)} mm<br><hr class="my-1"><span style="font-size: 10px;">Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}</span>`;
+                } else {
+                    rainfallAmount = parseFloat(stData.monthly_total) || 0;
+                    popupDetails = `<b>Station:</b> ${st}<br><b>Monthly Total:</b> ${rainfallAmount.toFixed(1)} mm<br><hr class="my-1"><span style="font-size: 10px;">Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}</span>`;
+                }
+
+                // Color and Size coding for rainfall volume
+                let color = "#94a3b8"; // Default Gray (0 mm)
+                let radius = 8;
+
+                if (rainfallAmount === 0.01) {
+                    color = "#a855f7"; // Purple for Trace
+                    radius = 9;
+                } else if (rainfallAmount > 0 && rainfallAmount <= 10) {
+                    color = "#10b981"; // Emerald Green for Light Rain
+                    radius = 11;
+                } else if (rainfallAmount > 10 && rainfallAmount <= 50) {
+                    color = "#2563eb"; // Blue for Moderate Rain
+                    radius = 16;
+                } else if (rainfallAmount > 50) {
+                    color = "#dc2626"; // Dark Red for Heavy Rain
+                    radius = 22;
+                }
+
+                const circleMarker = L.circleMarker([lat, lon], {
+                    radius: radius,
+                    fillColor: color,
+                    color: "#ffffff",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+
+                circleMarker.bindPopup(popupDetails);
+                mapMarkersLayerGroup.addLayer(circleMarker);
             }
         }
 
@@ -1087,6 +1234,7 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
+                    currentAdminDataCache = data;
                     todayRainfallDateGlobal = data.today_rainfall_date;
                     setText("adminDateText", data.rainfall_date);
                     setText("adminPrintDate", data.rainfall_date);
@@ -1154,6 +1302,9 @@
                         rowHtml += `<td class="p-1.5 border font-black bg-blue-50 text-blue-900">${total > 0 ? total + ' mm' : '0.0'}</td></tr>`;
                         tableBody.innerHTML += rowHtml;
                     }
+
+                    if (isMapMode) renderMapMarkers();
+
                 } else {
                     tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Admin Fetch Failed: ${data.message || 'Unknown Server Error'}</td></tr>`;
                 }
@@ -1179,6 +1330,7 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
+                    currentAdminDataCache = data;
                     setText("adminPrintDate", data.year_month);
                     setText("printHeaderTitle", "MONSOON MONTHLY DAY-WISE RAINFALL SUMMARY");
                     setText("printHeaderSubtitle", `Month: ${data.year_month} (24-Hour Synoptic Rain Totals)`);
@@ -1220,6 +1372,9 @@
                         rowHtml += `<td class="p-1 border font-black bg-purple-50 text-purple-900">${mTotal > 0 ? mTotal.toFixed(1) + 'm' : '0.0'}</td></tr>`;
                         tableBody.innerHTML += rowHtml;
                     }
+
+                    if (isMapMode) renderMapMarkers();
+
                 } else {
                     tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Monthly Fetch Failed: ${data.message || 'Unknown Server Error'}</td></tr>`;
                 }
