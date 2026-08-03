@@ -52,7 +52,7 @@
             <p id="loginError" class="text-red-500 text-xs font-bold text-center hidden"></p>
         </div>
 
-        <!-- WORKER DASHBOARD -->
+        <!-- WORKER & MASTER WORKER DASHBOARD -->
         <div id="dataForm" class="hidden space-y-5 no-print">
             
             <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
@@ -63,6 +63,17 @@
                 <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition px-2 py-1">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
+            </div>
+
+            <!-- MASTER WORKER STATION SELECTOR DROPDOWN -->
+            <div id="masterWorkerSection" class="hidden bg-purple-50 border border-purple-200 p-3 rounded-2xl space-y-1">
+                <label class="block text-[11px] font-extrabold text-purple-800 uppercase tracking-wider">
+                    <i class="fa-solid fa-user-gear mr-1"></i> Select Station to Enter Rain:
+                </label>
+                <select id="masterStationSelect" onchange="onMasterStationChange()" 
+                        class="w-full p-2.5 bg-white border border-purple-300 rounded-xl font-bold text-purple-900 text-xs outline-none focus:ring-2 focus:ring-purple-400">
+                    <!-- Populated dynamically from server -->
+                </select>
             </div>
 
             <!-- SUMMARY CARD -->
@@ -177,13 +188,22 @@
                 </button>
             </div>
 
-            <!-- DATE SELECTOR & PDF PRINT BUTTON -->
+            <!-- DATE SELECTOR WITH BACK/FORWARD ARROWS & PDF PRINT BUTTON -->
             <div class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-3 rounded-2xl no-print">
-                <div class="flex items-center gap-2 text-xs font-bold text-blue-900">
-                    <span>Select Date:</span>
+                <div class="flex items-center gap-1.5 text-xs font-bold text-blue-900">
+                    <span>Date:</span>
+                    <button onclick="shiftAdminDate(-1)" title="Previous Day" 
+                            class="bg-white border border-blue-200 text-blue-800 hover:bg-blue-100 px-2 py-1 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
                     <input type="date" id="adminDatePicker" onchange="loadAdminMasterSummary()" 
-                           class="bg-white border border-blue-200 text-blue-900 font-bold px-2 py-1 rounded-xl outline-none">
+                           class="bg-white border border-blue-200 text-blue-900 font-bold px-2.5 py-1 rounded-xl outline-none">
+                    <button onclick="shiftAdminDate(1)" id="adminNextDayBtn" title="Next Day" 
+                            class="bg-white border border-blue-200 text-blue-800 hover:bg-blue-100 px-2 py-1 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
                 </div>
+
                 <button onclick="generateSinglePagePDF()" 
                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5">
                     <i class="fa-solid fa-file-pdf"></i> Print / Save 1-Page PDF
@@ -276,6 +296,10 @@
         let editCounts = {};
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
+        let todayRainfallDateGlobal = "";
+
+        let masterStationsList = [];
+        let selectedMasterTargetPhone = "";
 
         let modalTargetPhone = "";
         let modalTargetStation = "";
@@ -367,11 +391,19 @@
                 document.getElementById("dataForm").classList.remove("hidden");
                 document.getElementById("adminDashboard").classList.add("hidden");
                 document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
-                setText("displayStation", stationName);
-                
-                populateAccumulativeSelects();
-                selectSlot(getRecentUTCSlot());
-                refreshTodayHistory();
+
+                if (userRole === "MASTER_WORKER") {
+                    document.getElementById("masterWorkerSection").classList.remove("hidden");
+                    setText("displayStation", "Master Field Worker");
+                    loadMasterStationsDropdown();
+                } else {
+                    document.getElementById("masterWorkerSection").classList.add("hidden");
+                    setText("displayStation", stationName);
+                    
+                    populateAccumulativeSelects();
+                    selectSlot(getRecentUTCSlot());
+                    refreshTodayHistory();
+                }
             }
         }
 
@@ -381,6 +413,39 @@
             document.getElementById("adminDashboard").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
             document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
+        }
+
+        // MASTER WORKER LOGIC
+        async function loadMasterStationsDropdown() {
+            const masterPhone = localStorage.getItem("worker_phone");
+            const selectEl = document.getElementById("masterStationSelect");
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=get_stations_list&phone=${encodeURIComponent(masterPhone)}`);
+                const data = await response.json();
+
+                if (data.status === "success" && data.stations.length > 0) {
+                    masterStationsList = data.stations;
+                    selectEl.innerHTML = "";
+                    
+                    masterStationsList.forEach(st => {
+                        selectEl.innerHTML += `<option value="${st.phone}">${st.name}</option>`;
+                    });
+
+                    selectedMasterTargetPhone = masterStationsList[0].phone;
+                    populateAccumulativeSelects();
+                    selectSlot(getRecentUTCSlot());
+                    refreshTodayHistory();
+                }
+            } catch (err) {
+                console.error("Master Worker Dropdown Error:", err);
+            }
+        }
+
+        function onMasterStationChange() {
+            selectedMasterTargetPhone = document.getElementById("masterStationSelect").value;
+            selectSlot(getRecentUTCSlot());
+            refreshTodayHistory();
         }
 
         function setMode(mode) {
@@ -435,9 +500,10 @@
 
         async function refreshTodayHistory() {
             const phone = localStorage.getItem("worker_phone");
+            const targetPhoneParam = (userRole === "MASTER_WORKER") ? selectedMasterTargetPhone : phone;
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=get_worker_data&phone=${encodeURIComponent(phone)}`);
+                const response = await fetch(`${SCRIPT_URL}?action=get_worker_data&phone=${encodeURIComponent(phone)}&target_phone=${encodeURIComponent(targetPhoneParam)}`);
                 const data = await response.json();
 
                 if (data.status === "success") {
@@ -470,7 +536,7 @@
                 const isSelected = (slot === currentSelectedSlot);
                 
                 const isFuture = (idx > currentSlotIdx);
-                const isLockedPast = (userRole === "WORKER" && idx < (currentSlotIdx - 1));
+                const isLockedPast = ((userRole === "WORKER" || userRole === "MASTER_WORKER") && idx < (currentSlotIdx - 1));
 
                 let displayVal = "--";
                 if (isFilled) {
@@ -513,6 +579,7 @@
 
         async function submitData() {
             const phone = localStorage.getItem("worker_phone");
+            const targetPhone = (userRole === "MASTER_WORKER") ? selectedMasterTargetPhone : phone;
             const rainfall = document.getElementById("rainfallInput").value;
             const statusMsg = document.getElementById("statusMsg");
             const submitBtn = document.getElementById("submitBtn");
@@ -536,7 +603,8 @@
 
             const payload = {
                 timestamp: new Date().toISOString(),
-                phone: phone,
+                phone: targetPhone,
+                master_worker_phone: (userRole === "MASTER_WORKER") ? phone : "",
                 utc_slot: currentSelectedSlot,
                 rainfall: parseFloat(rainfall)
             };
@@ -566,6 +634,7 @@
 
         async function submitAccumulativeData() {
             const phone = localStorage.getItem("worker_phone");
+            const targetPhone = (userRole === "MASTER_WORKER") ? selectedMasterTargetPhone : phone;
             const startIdx = parseInt(document.getElementById("accStartSlot").value);
             const endIdx = parseInt(document.getElementById("accEndSlot").value);
             const totalRain = parseFloat(document.getElementById("accRainfallInput").value);
@@ -589,7 +658,8 @@
 
             const payload = {
                 timestamp: new Date().toISOString(),
-                phone: phone,
+                phone: targetPhone,
+                master_worker_phone: (userRole === "MASTER_WORKER") ? phone : "",
                 start_slot_idx: startIdx,
                 end_slot_idx: endIdx,
                 rainfall: totalRain,
@@ -622,6 +692,23 @@
 
 
         // ================= MASTER ADMIN LOGIC =================
+        function shiftAdminDate(offsetDays) {
+            const dateInput = document.getElementById("adminDatePicker");
+            let currentDateVal = dateInput ? dateInput.value : "";
+            if (!currentDateVal) return;
+
+            let d = new Date(currentDateVal + "T00:00:00Z");
+            d.setUTCDate(d.getUTCDate() + offsetDays);
+            let newDateStr = d.toISOString().split("T")[0];
+
+            if (todayRainfallDateGlobal && newDateStr > todayRainfallDateGlobal) {
+                return; // Prevent future dates
+            }
+
+            dateInput.value = newDateStr;
+            loadAdminMasterSummary();
+        }
+
         async function loadAdminMasterSummary() {
             const tableBody = document.getElementById("adminTableBody");
             if (!tableBody) return;
@@ -637,10 +724,24 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
+                    todayRainfallDateGlobal = data.today_rainfall_date;
                     setText("adminDateText", data.rainfall_date);
                     setText("adminPrintDate", data.rainfall_date);
+                    
                     if (dateInput && !dateInput.value) {
                         dateInput.value = data.rainfall_date;
+                    }
+
+                    // Disable next day button if viewing today's date
+                    const nextBtn = document.getElementById("adminNextDayBtn");
+                    if (nextBtn) {
+                        if (data.rainfall_date >= data.today_rainfall_date) {
+                            nextBtn.disabled = true;
+                            nextBtn.className = "bg-slate-100 text-slate-300 border border-slate-200 px-2 py-1 rounded-lg text-xs cursor-not-allowed";
+                        } else {
+                            nextBtn.disabled = false;
+                            nextBtn.className = "bg-white border border-blue-200 text-blue-800 hover:bg-blue-100 px-2 py-1 rounded-lg text-xs transition cursor-pointer";
+                        }
                     }
 
                     const isPastDate = (data.rainfall_date < data.today_rainfall_date);
@@ -662,7 +763,6 @@
                             if (isFutureDate) {
                                 isFuture = true;
                             } else if (!isPastDate) {
-                                // Today's date: Lock slots later than current slot index
                                 isFuture = (idx > data.current_slot_idx);
                             }
 
