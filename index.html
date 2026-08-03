@@ -22,7 +22,6 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6">
 
-    <!-- MAIN CARD -->
     <div id="mainContainer" class="bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-xl border border-slate-200">
         
         <!-- HEADER -->
@@ -34,7 +33,7 @@
             <p class="text-xs font-semibold text-slate-400">Meteorological Observation Network</p>
         </div>
 
-        <!-- LOGIN SCREEN (No credentials in source code) -->
+        <!-- LOGIN SCREEN -->
         <div id="loginScreen" class="space-y-4 no-print">
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Registered Mobile Number</label>
@@ -53,7 +52,7 @@
             <p id="loginError" class="text-red-500 text-xs font-bold text-center hidden"></p>
         </div>
 
-        <!-- ================= WORKER DASHBOARD ================= -->
+        <!-- WORKER DASHBOARD -->
         <div id="dataForm" class="hidden space-y-5 no-print">
             
             <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
@@ -83,7 +82,7 @@
                 </div>
             </div>
 
-            <!-- CLICK-TO-SELECT 8-SLOT GRID -->
+            <!-- CLICK-TO-SELECT GRID -->
             <div>
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Today's 8 UTC Slots</h3>
@@ -104,7 +103,6 @@
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-bold text-slate-500">Rainfall Amount (mm)</label>
-                        <!-- TRACE RAIN BUTTON -->
                         <button onclick="setTraceValue()" type="button" class="text-[11px] font-extrabold bg-purple-100 text-purple-700 hover:bg-purple-200 px-2.5 py-0.5 rounded-md transition">
                             <i class="fa-solid fa-droplet mr-1"></i> Set Trace (T)
                         </button>
@@ -127,13 +125,13 @@
         </div>
 
 
-        <!-- ================= MASTER ADMIN DASHBOARD ================= -->
+        <!-- MASTER ADMIN DASHBOARD -->
         <div id="adminDashboard" class="hidden space-y-4">
             
             <div class="flex justify-between items-center border-b pb-3 no-print">
                 <div>
                     <h2 class="text-lg font-black text-slate-800">👑 Master Admin Dashboard</h2>
-                    <p class="text-xs font-bold text-slate-400">Tap Any Cell in Table to Amend Entry</p>
+                    <p class="text-xs font-bold text-slate-400">Tap Any Cell in Table to Amend Reading</p>
                 </div>
                 <button onclick="logout()" class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl hover:bg-red-50 hover:text-red-600">
                     Logout
@@ -237,7 +235,6 @@
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
 
-        // Admin Amend Modal Variables
         let modalTargetPhone = "";
         let modalTargetStation = "";
         let modalTargetSlot = "";
@@ -556,7 +553,7 @@
         }
 
         async function submitAdminAmend() {
-            const adminPhone = localStorage.getItem("worker_phone");
+            const adminPhone = localStorage.getItem("worker_phone"); // "0000"
             const val = document.getElementById("modalInput").value;
             const modalMsg = document.getElementById("modalMsg");
             const modalSaveBtn = document.getElementById("modalSaveBtn");
@@ -572,7 +569,8 @@
 
             const payload = {
                 timestamp: new Date().toISOString(),
-                phone: modalTargetPhone, // Station target phone
+                phone: modalTargetPhone,   // Target station phone
+                admin_phone: adminPhone,   // Pass Admin Caller Phone "0000" so backend bypasses worker locks
                 station: modalTargetStation,
                 utc_slot: modalTargetSlot,
                 rainfall: parseFloat(val)
@@ -587,7 +585,7 @@
                 });
 
                 closeAdminModal();
-                loadAdminMasterSummary(); // Refresh matrix table
+                setTimeout(loadAdminMasterSummary, 1000); // Refresh matrix table
             } catch (err) {
                 modalMsg.className = "text-xs font-bold text-center text-red-600 block";
                 modalMsg.innerText = "Error saving amendment.";
