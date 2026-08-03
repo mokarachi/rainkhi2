@@ -96,7 +96,7 @@
                 </div>
             </div>
 
-            <!-- STATION-WISE VIEW CONTAINER -->
+            <!-- STATION-WISE CONTAINER -->
             <div id="workerStationWiseContainer" class="space-y-2.5">
                 <div>
                     <div class="flex justify-between items-center mb-1">
@@ -117,9 +117,27 @@
                     </button>
                 </div>
 
+                <!-- SINGLE ENTRY CARD (WITH SLOT ARROWS ◀ ▶) -->
                 <div id="singleEntryCard" class="bg-blue-50/40 border border-blue-200 p-2.5 rounded-2xl space-y-2">
                     <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase text-blue-700">Slot: <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs ml-1 bg-blue-100 px-2 py-0.5 rounded-md">--</span></span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-black uppercase text-blue-700">Slot:</span>
+                            
+                            <!-- PREVIOUS SLOT ARROW ◀ -->
+                            <button onclick="shiftSelectedSlot(-1)" title="Previous Slot"
+                                    class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-md text-xs transition">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            
+                            <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs bg-blue-100 px-2 py-0.5 rounded-md">--</span>
+                            
+                            <!-- NEXT SLOT ARROW ▶ (Auto-disables if at current slot) -->
+                            <button onclick="shiftSelectedSlot(1)" id="nextSlotBtn" title="Next Slot"
+                                    class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-md text-xs transition">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+
                         <button onclick="setTraceValue()" type="button" class="text-[10px] font-extrabold bg-purple-100 text-purple-700 hover:bg-purple-200 px-2 py-1 rounded-lg transition">
                             <i class="fa-solid fa-droplet mr-0.5"></i> Trace (T)
                         </button>
@@ -167,21 +185,17 @@
                 </div>
             </div>
 
-            <!-- MASTER WORKER: SLOT-WISE BATCH ENTRY CONTAINER (7x3 GRID) -->
+            <!-- MASTER WORKER: SLOT-WISE BATCH CONTAINER -->
             <div id="masterSlotWiseContainer" class="hidden space-y-2.5">
                 <div class="bg-purple-50/70 border border-purple-200 p-2.5 rounded-2xl space-y-2">
                     <div class="flex justify-between items-center text-xs">
                         <label class="font-extrabold text-purple-900">Select Slot for Batch Entry:</label>
                         <select id="masterBatchSlotSelect" onchange="loadMasterSlotWiseGrid()" 
                                 class="p-1.5 bg-white border border-purple-300 rounded-xl font-bold text-purple-900 text-xs outline-none">
-                            <!-- Populated in JS -->
                         </select>
                     </div>
 
-                    <!-- 7 ROWS x 3 COLUMNS GRID FOR ALL 21 STATIONS -->
-                    <div id="master7x3Grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 max-h-[350px] overflow-y-auto pr-1">
-                        <!-- 21 Station cards loaded in JS -->
-                    </div>
+                    <div id="master7x3Grid" class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 max-h-[350px] overflow-y-auto pr-1"></div>
 
                     <button onclick="submitMasterBatchReadings()" id="masterBatchSubmitBtn" 
                             class="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold py-3 rounded-xl shadow transition text-xs">
@@ -207,15 +221,20 @@
                 </button>
             </div>
 
+            <!-- ADMIN 3-WAY VIEW TOGGLE (DAILY | MONTHLY | ACTIVITY LOG) -->
             <div class="flex bg-slate-100 p-0.5 rounded-xl text-xs font-bold text-center no-print">
-                <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
-                    <i class="fa-solid fa-calendar-day mr-1"></i> Daily Summary (3-Hour Slots)
+                <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
+                    <i class="fa-solid fa-calendar-day mr-1"></i> Daily
                 </button>
-                <button onclick="setAdminViewMode('monthly')" id="adminModeMonthlyBtn" class="w-1/2 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
-                    <i class="fa-solid fa-calendar-days mr-1"></i> Monthly Summary (Day-Wise)
+                <button onclick="setAdminViewMode('monthly')" id="adminModeMonthlyBtn" class="w-1/3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-calendar-days mr-1"></i> Monthly
+                </button>
+                <button onclick="setAdminViewMode('logs')" id="adminModeLogsBtn" class="w-1/3 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-list-check mr-1"></i> Activity Log
                 </button>
             </div>
 
+            <!-- DAILY CONTROLS -->
             <div id="adminDailyControls" class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1 text-xs font-bold text-blue-900">
                     <span>Date:</span>
@@ -237,6 +256,7 @@
                 </button>
             </div>
 
+            <!-- MONTHLY CONTROLS -->
             <div id="adminMonthlyControls" class="hidden flex flex-wrap justify-between items-center gap-2 bg-purple-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1.5 text-xs font-bold text-purple-900">
                     <span>Select Month:</span>
@@ -250,11 +270,21 @@
                 </button>
             </div>
 
+            <!-- LOGS CONTROLS -->
+            <div id="adminLogsControls" class="hidden flex justify-between items-center bg-amber-50 p-2.5 rounded-2xl no-print">
+                <span class="text-xs font-extrabold text-amber-900"><i class="fa-solid fa-shield-halved mr-1"></i> User Activity Audit Trail (Full Admin Only)</span>
+                <button onclick="loadAdminActivityLogs()" class="text-xs font-bold bg-amber-100 text-amber-900 hover:bg-amber-200 px-3 py-1 rounded-xl transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Refresh Logs
+                </button>
+            </div>
+
+            <!-- PRINT HEADER -->
             <div class="hidden print-only text-center mb-2">
                 <h2 style="font-size: 15px; font-weight: bold;" id="printHeaderTitle">MONSOON RAINFALL SUMMARY REPORT</h2>
                 <p style="font-size: 10px;" id="printHeaderSubtitle">Meteorological Rainfall Date: <span id="adminPrintDate">--</span></p>
             </div>
 
+            <!-- DAILY MATRIX TABLE -->
             <div id="adminDailyTableContainer" class="overflow-x-auto">
                 <table id="adminMatrixTable" class="w-full text-[10px] text-center border-collapse">
                     <thead>
@@ -275,6 +305,7 @@
                 </table>
             </div>
 
+            <!-- MONTHLY MATRIX TABLE -->
             <div id="adminMonthlyTableContainer" class="hidden overflow-x-auto">
                 <table id="adminMonthlyMatrixTable" class="w-full text-[9px] text-center border-collapse">
                     <thead id="adminMonthlyTableHeader"></thead>
@@ -282,6 +313,24 @@
                 </table>
             </div>
 
+            <!-- USER ACTIVITY LOGS TABLE -->
+            <div id="adminLogsTableContainer" class="hidden overflow-x-auto max-h-[400px]">
+                <table id="adminLogsTable" class="w-full text-[10px] text-left border-collapse">
+                    <thead>
+                        <tr class="bg-amber-100/70 text-amber-900 font-bold">
+                            <th class="p-2 border">Timestamp (UTC)</th>
+                            <th class="p-2 border">User Phone</th>
+                            <th class="p-2 border">Role</th>
+                            <th class="p-2 border">Station</th>
+                            <th class="p-2 border">Category</th>
+                            <th class="p-2 border">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminLogsTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- PRINT FOOTER -->
             <div class="hidden print-only text-[10px] mt-3 flex justify-between">
                 <span>Generated On: <span id="printGeneratedTime"></span></span>
                 <span>Verified By: ___________________</span>
@@ -341,11 +390,11 @@
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
         let todayRainfallDateGlobal = "";
-        let adminViewMode = "daily";
+        let adminViewMode = "daily"; // 'daily', 'monthly', or 'logs'
 
         let masterStationsList = [];
         let selectedMasterTargetPhone = "";
-        let masterViewMode = "station_wise"; // 'station_wise' or 'slot_wise'
+        let masterViewMode = "station_wise";
         let masterAllStationsData = {};
 
         let modalTargetPhone = "";
@@ -427,6 +476,12 @@
                 document.getElementById("adminDashboard").classList.remove("hidden");
                 document.getElementById("dataForm").classList.add("hidden");
                 document.getElementById("appMainHeader").classList.remove("hidden");
+
+                const logsBtn = document.getElementById("adminModeLogsBtn");
+                if (logsBtn) {
+                    if (userRole === "ADMIN") logsBtn.classList.remove("hidden");
+                    else logsBtn.classList.add("hidden"); // Hide Activity Logs tab for Silent Admin
+                }
                 
                 if (userRole === "SILENT_ADMIN") {
                     setText("adminSubHeading", "Silent Observer Admin (View-Only Mode)");
@@ -465,7 +520,88 @@
             document.getElementById("mainContainer").className = "bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-md border border-slate-200";
         }
 
-        // MASTER WORKER TOGGLE
+        function setAdminViewMode(mode) {
+            adminViewMode = mode;
+            
+            const dailyCtrl = document.getElementById("adminDailyControls");
+            const monthlyCtrl = document.getElementById("adminMonthlyControls");
+            const logsCtrl = document.getElementById("adminLogsControls");
+            
+            const dailyTable = document.getElementById("adminDailyTableContainer");
+            const monthlyTable = document.getElementById("adminMonthlyTableContainer");
+            const logsTable = document.getElementById("adminLogsTableContainer");
+
+            const dailyBtn = document.getElementById("adminModeDailyBtn");
+            const monthlyBtn = document.getElementById("adminModeMonthlyBtn");
+            const logsBtn = document.getElementById("adminModeLogsBtn");
+
+            // Reset classes
+            dailyCtrl.classList.add("hidden");
+            monthlyCtrl.classList.add("hidden");
+            logsCtrl.classList.add("hidden");
+            
+            dailyTable.classList.add("hidden");
+            monthlyTable.classList.add("hidden");
+            logsTable.classList.add("hidden");
+
+            dailyBtn.className = "w-1/3 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+            monthlyBtn.className = "w-1/3 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+            if (logsBtn) logsBtn.className = "w-1/3 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+
+            if (mode === 'daily') {
+                dailyCtrl.classList.remove("hidden");
+                dailyTable.classList.remove("hidden");
+                dailyBtn.className = "w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600 font-bold";
+                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-4xl border border-slate-200";
+                loadAdminMasterSummary();
+            } else if (mode === 'monthly') {
+                monthlyCtrl.classList.remove("hidden");
+                monthlyTable.classList.remove("hidden");
+                monthlyBtn.className = "w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-purple-600 font-bold";
+                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-7xl border border-slate-200";
+
+                const monthInput = document.getElementById("adminMonthPicker");
+                if (monthInput && !monthInput.value) {
+                    const now = new Date();
+                    monthInput.value = now.toISOString().substring(0, 7);
+                }
+                loadAdminMonthlySummary();
+            } else if (mode === 'logs' && userRole === 'ADMIN') {
+                logsCtrl.classList.remove("hidden");
+                logsTable.classList.remove("hidden");
+                if (logsBtn) logsBtn.className = "w-1/3 py-1.5 rounded-lg bg-white shadow-sm text-amber-700 font-bold";
+                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-5xl border border-slate-200";
+                loadAdminActivityLogs();
+            }
+        }
+
+        // WORKER SLOT SHIFT ARROWS (◀ / ▶)
+        function shiftSelectedSlot(offset) {
+            let currentIdx = ALL_SLOTS.indexOf(currentSelectedSlot);
+            if (currentIdx === -1) currentIdx = currentSlotIdx;
+
+            let targetIdx = currentIdx + offset;
+
+            if (targetIdx < 0 || targetIdx > currentSlotIdx) return; // Prevent out of bounds or future slots
+
+            selectSlot(ALL_SLOTS[targetIdx]);
+        }
+
+        function updateSlotArrowButtons() {
+            const currentIdx = ALL_SLOTS.indexOf(currentSelectedSlot);
+            const nextBtn = document.getElementById("nextSlotBtn");
+
+            if (nextBtn) {
+                if (currentIdx >= currentSlotIdx) {
+                    nextBtn.disabled = true;
+                    nextBtn.className = "bg-slate-100 text-slate-300 font-bold px-2 py-0.5 rounded-md text-xs cursor-not-allowed";
+                } else {
+                    nextBtn.disabled = false;
+                    nextBtn.className = "bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-2 py-0.5 rounded-md text-xs transition cursor-pointer";
+                }
+            }
+        }
+
         function setMasterViewMode(mode) {
             masterViewMode = mode;
             if (mode === 'station_wise') {
@@ -520,7 +656,6 @@
             refreshTodayHistory();
         }
 
-        // MASTER WORKER 7x3 BATCH GRID LOGIC
         function populateMasterBatchSlotSelect() {
             const selectEl = document.getElementById("masterBatchSlotSelect");
             if (!selectEl) return;
@@ -639,7 +774,6 @@
             }
         }
 
-
         function setMode(mode) {
             if (mode === 'single') {
                 document.getElementById("singleEntryCard").classList.remove("hidden");
@@ -687,6 +821,7 @@
             const edits = editCounts[slot] || 0;
             setText("editCountBadge", `Slot Updates: ${edits}/3`);
 
+            updateSlotArrowButtons();
             renderSlotsGrid();
         }
 
@@ -710,6 +845,7 @@
                     setText("summaryProgress", `${completedCount}/8`);
 
                     populateAccumulativeSelects();
+                    updateSlotArrowButtons();
                     renderSlotsGrid();
                 }
             } catch (err) {
@@ -902,7 +1038,7 @@
         async function loadAdminMasterSummary() {
             const tableBody = document.getElementById("adminTableBody");
             if (!tableBody) return;
-            tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-slate-400 font-bold">Loading Real-Time Matrix...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-slate-400 font-bold text-center">Loading Real-Time Matrix...</td></tr>`;
 
             const phone = localStorage.getItem("worker_phone") || "0000";
             const dateInput = document.getElementById("adminDatePicker");
@@ -994,7 +1130,7 @@
             const tableBody = document.getElementById("adminMonthlyTableBody");
             if (!tableHeader || !tableBody) return;
 
-            tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-slate-400 font-bold">Loading Monthly Day-Wise Matrix...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-slate-400 font-bold text-center">Loading Monthly Day-Wise Matrix...</td></tr>`;
 
             const phone = localStorage.getItem("worker_phone") || "0000";
             const monthInput = document.getElementById("adminMonthPicker");
@@ -1052,6 +1188,54 @@
                 }
             } catch (err) {
                 tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Network/JS Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        // LOAD USER ACTIVITY LOGS (FULL ADMIN ONLY)
+        async function loadAdminActivityLogs() {
+            const tableBody = document.getElementById("adminLogsTableBody");
+            if (!tableBody) return;
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-slate-400 font-bold text-center">Loading Activity Audit Logs...</td></tr>`;
+
+            const phone = localStorage.getItem("worker_phone") || "0000";
+
+            try {
+                const reqUrl = `${SCRIPT_URL}?action=get_activity_logs&phone=${encodeURIComponent(phone)}`;
+                const response = await fetch(reqUrl);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    const logsList = data.logs || [];
+                    if (logsList.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-slate-400 font-bold text-center">No activity logs recorded yet.</td></tr>`;
+                        return;
+                    }
+
+                    tableBody.innerHTML = "";
+
+                    logsList.forEach(log => {
+                        let catClass = "bg-slate-100 text-slate-700";
+                        if (log.category === "LOGIN") catClass = "bg-blue-100 text-blue-800";
+                        else if (log.category === "ADMIN_AMEND") catClass = "bg-purple-100 text-purple-800";
+                        else if (log.category === "ACCUMULATIVE_ENTRY") catClass = "bg-amber-100 text-amber-900";
+                        else if (log.category === "REPORT_GENERATE") catClass = "bg-indigo-100 text-indigo-800";
+
+                        tableBody.innerHTML += `
+                            <tr class="hover:bg-slate-50 border-b">
+                                <td class="p-2 border text-[9px] font-mono text-slate-500 whitespace-nowrap">${log.timestamp.substring(0, 19).replace('T', ' ')}</td>
+                                <td class="p-2 border font-bold text-slate-800 whitespace-nowrap">${log.phone}</td>
+                                <td class="p-2 border font-bold text-slate-600 whitespace-nowrap"><span class="px-1.5 py-0.5 rounded text-[9px] bg-slate-100">${log.role}</span></td>
+                                <td class="p-2 border font-bold text-slate-700 whitespace-nowrap">${log.station}</td>
+                                <td class="p-2 border whitespace-nowrap"><span class="px-2 py-0.5 rounded-full font-black text-[9px] ${catClass}">${log.category}</span></td>
+                                <td class="p-2 border font-medium text-slate-600 text-[10px]">${log.details}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Logs Fetch Failed: ${data.message}</td></tr>`;
+                }
+            } catch (err) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Network Error: ${err.message}</td></tr>`;
             }
         }
 
