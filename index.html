@@ -93,8 +93,18 @@
                 <div id="slotsGrid" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- INPUT FORM CARD -->
-            <div class="bg-white border-2 border-blue-500/30 p-4 rounded-2xl space-y-3 bg-blue-50/20">
+            <!-- MODE SWITCH (SINGLE vs ACCUMULATIVE) -->
+            <div class="flex bg-slate-100 p-1 rounded-2xl text-xs font-bold text-center">
+                <button onclick="setMode('single')" id="modeSingleBtn" class="w-1/2 py-2 rounded-xl bg-white shadow-sm text-blue-600">
+                    Single Slot Entry
+                </button>
+                <button onclick="setMode('accumulative')" id="modeAccBtn" class="w-1/2 py-2 rounded-xl text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-layer-group mr-1"></i> Accumulative Entry
+                </button>
+            </div>
+
+            <!-- SINGLE ENTRY CARD -->
+            <div id="singleEntryCard" class="bg-white border-2 border-blue-500/30 p-4 rounded-2xl space-y-3 bg-blue-50/20">
                 <div class="flex justify-between items-center">
                     <span class="text-xs font-black uppercase tracking-wider text-blue-700">Selected Slot</span>
                     <span id="selectedSlotText" class="text-xs font-extrabold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg">--</span>
@@ -121,6 +131,39 @@
                 </button>
             </div>
 
+            <!-- ACCUMULATIVE ENTRY CARD -->
+            <div id="accumulativeEntryCard" class="hidden bg-purple-50/50 border-2 border-purple-400/30 p-4 rounded-2xl space-y-3">
+                <div class="bg-purple-100 text-purple-800 p-2.5 rounded-xl text-xs font-bold">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Multi-Slot Accumulative Reading (Divides rain equally across missed slots).
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-500 mb-1">From Slot</label>
+                        <select id="accStartSlot" class="w-full p-2.5 border rounded-xl font-bold bg-white outline-none">
+                            <!-- Populated in JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-500 mb-1">To Slot</label>
+                        <select id="accEndSlot" class="w-full p-2.5 border rounded-xl font-bold bg-white outline-none">
+                            <!-- Populated in JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Total Accumulated Rain (mm)</label>
+                    <input type="number" step="0.1" id="accRainfallInput" placeholder="e.g. 30.0" 
+                           class="w-full p-3 border rounded-xl font-bold text-slate-800 text-lg bg-white outline-none">
+                </div>
+
+                <button onclick="submitAccumulativeData()" id="accSubmitBtn" 
+                        class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3.5 rounded-xl shadow-md transition">
+                    Save Accumulative Reading
+                </button>
+            </div>
+
             <p id="statusMsg" class="text-xs font-bold text-center p-3 rounded-xl hidden"></p>
         </div>
 
@@ -131,16 +174,20 @@
             <div class="flex justify-between items-center border-b pb-3 no-print">
                 <div>
                     <h2 class="text-lg font-black text-slate-800">👑 Master Admin Dashboard</h2>
-                    <p class="text-xs font-bold text-slate-400">Tap Any Cell in Table to Amend Reading</p>
+                    <p id="adminSubHeading" class="text-xs font-bold text-slate-400">Tap Any Cell in Table to Amend Reading</p>
                 </div>
                 <button onclick="logout()" class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl hover:bg-red-50 hover:text-red-600">
                     Logout
                 </button>
             </div>
 
-            <!-- PDF PRINT BUTTON -->
-            <div class="flex justify-between items-center bg-blue-50 p-3 rounded-2xl no-print">
-                <span class="text-xs font-bold text-blue-800">Date: <span id="adminDateText">--</span></span>
+            <!-- DATE SELECTOR & PDF PRINT BUTTON -->
+            <div class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-3 rounded-2xl no-print">
+                <div class="flex items-center gap-2 text-xs font-bold text-blue-900">
+                    <span>Select Date:</span>
+                    <input type="date" id="adminDatePicker" onchange="loadAdminMasterSummary()" 
+                           class="bg-white border border-blue-200 text-blue-900 font-bold px-2 py-1 rounded-xl outline-none">
+                </div>
                 <button onclick="generateSinglePagePDF()" 
                         class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5">
                     <i class="fa-solid fa-file-pdf"></i> Print / Save 1-Page PDF
@@ -214,7 +261,6 @@
     </div>
 
     <script>
-        // 1. PASTE YOUR GOOGLE APPS SCRIPT URL HERE
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGYlxgaYdQF5YgN764FdxD-A1_hCk37zzetHsmHMKB7w_Nc2fZN-irQycZCmSrB5EW/exec";
 
         const ALL_SLOTS = [
@@ -241,18 +287,16 @@
 
         function getRecentUTCSlot() {
             const now = new Date();
-            const hour = now.getUTCHours();
-            let endHour = Math.floor(hour / 3) * 3;
-            let startHour = endHour - 3;
-            if (startHour < 0) { startHour = 21; endHour = 0; }
-            return `${String(startHour).padStart(2, '0')}:00 - ${String(endHour).padStart(2, '0')}:00 UTC`;
+            const totalMins = now.getUTCHours() * 60 + now.getUTCMinutes();
+            const shiftedMins = (totalMins + 15) % 1440;
+            const block = Math.floor(shiftedMins / 180);
+            const SLOT_INDEX_MAP = [7, 0, 1, 2, 3, 4, 5, 6];
+            return ALL_SLOTS[SLOT_INDEX_MAP[block]];
         }
 
         window.onload = function() {
             const savedPhone = localStorage.getItem("worker_phone");
-            if (savedPhone) {
-                verifyLogin(savedPhone);
-            }
+            if (savedPhone) verifyLogin(savedPhone);
         };
 
         async function handleLogin() {
@@ -301,10 +345,16 @@
         function showDashboard() {
             document.getElementById("loginScreen").classList.add("hidden");
 
-            if (userRole === "ADMIN") {
+            if (userRole === "ADMIN" || userRole === "SILENT_ADMIN") {
                 document.getElementById("adminDashboard").classList.remove("hidden");
                 document.getElementById("dataForm").classList.add("hidden");
                 document.getElementById("mainContainer").classList.replace("max-w-xl", "max-w-4xl");
+                
+                if (userRole === "SILENT_ADMIN") {
+                    document.getElementById("adminSubHeading").innerText = "Silent Observer Admin (View-Only Mode)";
+                } else {
+                    document.getElementById("adminSubHeading").innerText = "Tap Any Cell in Table to Amend Reading";
+                }
                 loadAdminMasterSummary();
             } else {
                 document.getElementById("dataForm").classList.remove("hidden");
@@ -312,6 +362,7 @@
                 document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
                 document.getElementById("displayStation").innerText = stationName;
                 
+                populateAccumulativeSelects();
                 selectSlot(getRecentUTCSlot());
                 refreshTodayHistory();
             }
@@ -323,6 +374,34 @@
             document.getElementById("adminDashboard").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
             document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
+        }
+
+        function setMode(mode) {
+            if (mode === 'single') {
+                document.getElementById("singleEntryCard").classList.remove("hidden");
+                document.getElementById("accumulativeEntryCard").classList.add("hidden");
+                document.getElementById("modeSingleBtn").className = "w-1/2 py-2 rounded-xl bg-white shadow-sm text-blue-600 font-bold";
+                document.getElementById("modeAccBtn").className = "w-1/2 py-2 rounded-xl text-slate-500 font-bold hover:text-slate-700";
+            } else {
+                document.getElementById("singleEntryCard").classList.add("hidden");
+                document.getElementById("accumulativeEntryCard").classList.remove("hidden");
+                document.getElementById("modeAccBtn").className = "w-1/2 py-2 rounded-xl bg-white shadow-sm text-purple-600 font-bold";
+                document.getElementById("modeSingleBtn").className = "w-1/2 py-2 rounded-xl text-slate-500 font-bold hover:text-slate-700";
+            }
+        }
+
+        function populateAccumulativeSelects() {
+            const startSelect = document.getElementById("accStartSlot");
+            const endSelect = document.getElementById("accEndSlot");
+            startSelect.innerHTML = "";
+            endSelect.innerHTML = "";
+
+            ALL_SLOTS.forEach((slot, idx) => {
+                if (idx <= currentSlotIdx) {
+                    startSelect.innerHTML += `<option value="${idx}">${slot.replace(' UTC', '')}</option>`;
+                    endSelect.innerHTML += `<option value="${idx}" ${idx === currentSlotIdx ? 'selected' : ''}>${slot.replace(' UTC', '')}</option>`;
+                }
+            });
         }
 
         function setTraceValue() {
@@ -363,9 +442,7 @@
                     let completedCount = Object.keys(todayEntries).length;
                     document.getElementById("summaryProgress").innerText = `${completedCount} / 8`;
 
-                    const edits = editCounts[currentSelectedSlot] || 0;
-                    document.getElementById("editCountBadge").innerText = `Slot Updates Used: ${edits} / 3`;
-
+                    populateAccumulativeSelects();
                     renderSlotsGrid();
                 }
             } catch (err) {
@@ -386,23 +463,15 @@
                 const isLockedPast = (userRole === "WORKER" && idx < (currentSlotIdx - 1));
 
                 let displayVal = "--";
-                if (isFilled) {
-                    displayVal = (rawVal === 0.01) ? "T (Trace)" : rawVal + "m";
-                }
+                if (isFilled) displayVal = (rawVal === 0.01) ? "T (Trace)" : rawVal + "m";
 
                 let cardClass = "p-3 rounded-2xl border transition flex justify-between items-center text-xs ";
                 
-                if (isFuture) {
-                    cardClass += "bg-slate-100 border-slate-200 text-slate-300 opacity-60 cursor-not-allowed";
-                } else if (isLockedPast) {
-                    cardClass += "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed";
-                } else if (isSelected) {
-                    cardClass += "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30 cursor-pointer";
-                } else if (isFilled) {
-                    cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900 cursor-pointer hover:border-emerald-300";
-                } else {
-                    cardClass += "bg-slate-50 border-slate-200 text-slate-500 cursor-pointer hover:border-slate-300";
-                }
+                if (isFuture) cardClass += "bg-slate-100 border-slate-200 text-slate-300 opacity-60 cursor-not-allowed";
+                else if (isLockedPast) cardClass += "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed";
+                else if (isSelected) cardClass += "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/30 cursor-pointer";
+                else if (isFilled) cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900 cursor-pointer hover:border-emerald-300";
+                else cardClass += "bg-slate-50 border-slate-200 text-slate-500 cursor-pointer hover:border-slate-300";
 
                 let badgeText = "Tap to Select";
                 if (isFuture) badgeText = "🔒 Future";
@@ -478,6 +547,59 @@
             }
         }
 
+        async function submitAccumulativeData() {
+            const phone = localStorage.getItem("worker_phone");
+            const startIdx = parseInt(document.getElementById("accStartSlot").value);
+            const endIdx = parseInt(document.getElementById("accEndSlot").value);
+            const totalRain = parseFloat(document.getElementById("accRainfallInput").value);
+            const statusMsg = document.getElementById("statusMsg");
+            const accSubmitBtn = document.getElementById("accSubmitBtn");
+
+            if (startIdx > endIdx) {
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
+                statusMsg.innerText = "Start slot must be earlier than End slot!";
+                return;
+            }
+
+            if (isNaN(totalRain) || totalRain < 0 || totalRain > 300) {
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
+                statusMsg.innerText = "Please enter a valid accumulated rain amount.";
+                return;
+            }
+
+            const slotCount = (endIdx - startIdx) + 1;
+            const dividedRain = parseFloat((totalRain / slotCount).toFixed(2));
+
+            accSubmitBtn.disabled = true;
+            accSubmitBtn.innerText = `Dividing ${totalRain}mm across ${slotCount} slots...`;
+
+            for (let i = startIdx; i <= endIdx; i++) {
+                const targetSlot = ALL_SLOTS[i];
+                const payload = {
+                    timestamp: new Date().toISOString(),
+                    phone: phone,
+                    utc_slot: targetSlot,
+                    rainfall: dividedRain,
+                    is_accumulative: true
+                };
+
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-purple-700 bg-purple-50 block";
+            statusMsg.innerText = `✅ Divided ${totalRain} mm (${dividedRain} mm/slot) across ${slotCount} slots!`;
+            
+            accSubmitBtn.disabled = false;
+            accSubmitBtn.innerText = "Save Accumulative Reading";
+            document.getElementById("accRainfallInput").value = "";
+            setTimeout(refreshTodayHistory, 1500);
+        }
+
 
         // ================= MASTER ADMIN LOGIC =================
         async function loadAdminMasterSummary() {
@@ -485,14 +607,18 @@
             tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-slate-400 font-bold">Loading Real-Time Matrix...</td></tr>`;
 
             const phone = localStorage.getItem("worker_phone");
+            const targetDate = document.getElementById("adminDatePicker").value || "";
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=get_admin_data&phone=${encodeURIComponent(phone)}`);
+                const response = await fetch(`${SCRIPT_URL}?action=get_admin_data&phone=${encodeURIComponent(phone)}&target_date=${encodeURIComponent(targetDate)}`);
                 const data = await response.json();
 
                 if (data.status === "success") {
                     document.getElementById("adminDateText").innerText = data.rainfall_date;
                     document.getElementById("adminPrintDate").innerText = data.rainfall_date;
+                    if (!document.getElementById("adminDatePicker").value) {
+                        document.getElementById("adminDatePicker").value = data.rainfall_date;
+                    }
 
                     const stationMap = data.stations || {};
                     tableBody.innerHTML = "";
@@ -515,8 +641,9 @@
                             if (isFuture) {
                                 rowHtml += `<td class="p-1 border bg-slate-100 text-slate-300">🔒</td>`;
                             } else {
-                                rowHtml += `<td onclick="openAdminModal('${stPhone}', '${st}', '${slot}', '${val !== '--' ? val : ''}')" 
-                                                class="p-1 border cursor-pointer hover:bg-blue-100 font-bold ${val !== '--' ? 'text-blue-700 bg-blue-50/50' : 'text-slate-300'}">
+                                const isClickable = (userRole === "ADMIN");
+                                rowHtml += `<td ${isClickable ? `onclick="openAdminModal('${stPhone}', '${st}', '${slot}', '${val !== '--' ? val : ''}')"` : ''} 
+                                                class="p-1 border ${isClickable ? 'cursor-pointer hover:bg-blue-100' : ''} font-bold ${val !== '--' ? 'text-blue-700 bg-blue-50/50' : 'text-slate-300'}">
                                                 ${displayCell}
                                             </td>`;
                             }
@@ -531,8 +658,9 @@
             }
         }
 
-        // AMEND MODAL FUNCTIONS
         function openAdminModal(phone, station, slot, currentVal) {
+            if (userRole !== "ADMIN") return;
+            
             modalTargetPhone = phone;
             modalTargetStation = station;
             modalTargetSlot = slot;
@@ -553,7 +681,7 @@
         }
 
         async function submitAdminAmend() {
-            const adminPhone = localStorage.getItem("worker_phone"); // "0000"
+            const adminPhone = localStorage.getItem("worker_phone");
             const val = document.getElementById("modalInput").value;
             const modalMsg = document.getElementById("modalMsg");
             const modalSaveBtn = document.getElementById("modalSaveBtn");
@@ -569,8 +697,8 @@
 
             const payload = {
                 timestamp: new Date().toISOString(),
-                phone: modalTargetPhone,   // Target station phone
-                admin_phone: adminPhone,   // Pass Admin Caller Phone "0000" so backend bypasses worker locks
+                phone: modalTargetPhone,
+                admin_phone: adminPhone,
                 station: modalTargetStation,
                 utc_slot: modalTargetSlot,
                 rainfall: parseFloat(val)
@@ -585,7 +713,7 @@
                 });
 
                 closeAdminModal();
-                setTimeout(loadAdminMasterSummary, 1000); // Refresh matrix table
+                setTimeout(loadAdminMasterSummary, 1000);
             } catch (err) {
                 modalMsg.className = "text-xs font-bold text-center text-red-600 block";
                 modalMsg.innerText = "Error saving amendment.";
