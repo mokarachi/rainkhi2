@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monsoon Rainfall Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <style>
+    <style id="printStyleTag">
         @media print {
             body { background: white !important; padding: 0 !important; font-size: 10px !important; }
             .no-print { display: none !important; }
@@ -20,44 +20,52 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 font-sans text-slate-800">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6">
 
-    <!-- MAIN CONTAINER -->
-    <div id="mainContainer" class="bg-white p-3.5 sm:p-5 rounded-3xl shadow-xl w-full max-w-md border border-slate-200">
+    <div id="mainContainer" class="bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-xl border border-slate-200">
         
-        <!-- HEADER (Worker View: Hidden / Admin View: Compact) -->
-        <div id="appMainHeader" class="text-center mb-3 no-print">
-            <div class="inline-flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 rounded-xl mb-1 shadow-sm">
-                <i class="fa-solid font-bold text-xl fa-cloud-showers-heavy"></i>
+        <!-- HEADER -->
+        <div id="appMainHeader" class="text-center mb-6 no-print">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl mb-2 shadow-sm">
+                <i class="fa-solid font-bold text-2xl fa-cloud-showers-heavy"></i>
             </div>
-            <h1 class="text-lg font-black text-slate-800 tracking-tight leading-none">Monsoon Rainfall System</h1>
-            <p class="text-[10px] font-semibold text-slate-400 mt-0.5">Meteorological Observation Network</p>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Monsoon Rainfall System</h1>
+            <p class="text-xs font-semibold text-slate-400">Meteorological Observation Network</p>
         </div>
 
         <!-- LOGIN SCREEN -->
-        <div id="loginScreen" class="space-y-3 no-print">
+        <div id="loginScreen" class="space-y-4 no-print">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Registered Mobile Number</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Registered Mobile Number</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                         <i class="fa-solid fa-phone"></i>
                     </span>
                     <input type="tel" id="phoneNumberInput" placeholder="Enter Mobile Number" 
-                           class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-800 text-sm">
+                           class="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-semibold text-slate-800">
                 </div>
             </div>
             <button onclick="handleLogin()" id="loginBtn"
-                    class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3 rounded-xl shadow-md shadow-blue-200 transition text-sm">
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 transition">
                 Sign In to Station
             </button>
             <p id="loginError" class="text-red-500 text-xs font-bold text-center hidden"></p>
         </div>
 
-
-        <!-- ================= ZERO-SCROLL WORKER DASHBOARD ================= -->
-        <div id="dataForm" class="hidden space-y-2.5 no-print">
+        <!-- WORKER & MASTER WORKER DASHBOARD -->
+        <div id="dataForm" class="hidden space-y-4 no-print">
             
-            <!-- MASTER WORKER STATION SELECTOR (COMPACT) -->
+            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs">
+                <div>
+                    <span class="text-slate-400 block font-semibold">Station Name</span>
+                    <span id="displayStation" class="font-bold text-slate-800 text-sm"></span>
+                </div>
+                <button onclick="logout()" class="text-slate-400 hover:text-red-500 transition px-2 py-1">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+
+            <!-- MASTER WORKER STATION SELECTOR -->
             <div id="masterWorkerSection" class="hidden bg-purple-50 border border-purple-200 p-2 rounded-xl">
                 <div class="flex items-center gap-2">
                     <span class="text-[10px] font-black text-purple-800 uppercase whitespace-nowrap"><i class="fa-solid fa-user-gear"></i> Station:</span>
@@ -67,28 +75,21 @@
                 </div>
             </div>
 
-            <!-- UNIFIED TOP SUMMARY BANNER -->
+            <!-- SUMMARY CARD -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-3 text-white shadow-md flex items-center justify-between">
                 <div class="space-y-0.5">
-                    <div class="flex items-center gap-1.5">
-                        <span id="displayStation" class="font-black text-xs sm:text-sm text-white truncate max-w-[170px]"></span>
-                        <button onclick="logout()" class="text-blue-200 hover:text-white text-xs px-1" title="Logout">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                        </button>
-                    </div>
                     <p class="text-[10px] font-semibold text-blue-200 flex items-center gap-2">
                         <span><i class="fa-regular fa-calendar mr-1"></i><span id="displayDateText">--</span></span>
                         <span>• Slots: <strong id="summaryProgress" class="text-white">0/8</strong></span>
                     </p>
                 </div>
-                
                 <div class="text-right">
                     <span class="text-[9px] font-extrabold uppercase text-blue-200 block tracking-wider">Today's Total</span>
                     <span class="text-2xl font-black leading-none tracking-tight"><span id="summaryTotalRain">0.0</span><span class="text-xs font-normal text-blue-200 ml-0.5">mm</span></span>
                 </div>
             </div>
 
-            <!-- 4x2 COMPACT SLOT GRID (Height ~90px) -->
+            <!-- 4x2 COMPACT GRID -->
             <div>
                 <div class="flex justify-between items-center mb-1">
                     <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Tap Slot to Select:</span>
@@ -96,11 +97,10 @@
                         <i class="fa-solid fa-rotate-right mr-0.5"></i> Refresh
                     </button>
                 </div>
-                <!-- 4 Columns x 2 Rows Layout -->
                 <div id="slotsGrid" class="grid grid-cols-4 gap-1.5"></div>
             </div>
 
-            <!-- MODE SWITCH (COMPACT SEGMENT CONTROL) -->
+            <!-- MODE SWITCH -->
             <div class="flex bg-slate-100 p-0.5 rounded-xl text-[11px] font-bold text-center">
                 <button onclick="setMode('single')" id="modeSingleBtn" class="w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
                     Single Slot Entry
@@ -110,7 +110,7 @@
                 </button>
             </div>
 
-            <!-- SINGLE ENTRY CARD (LARGE READABLE INPUT) -->
+            <!-- SINGLE ENTRY CARD -->
             <div id="singleEntryCard" class="bg-blue-50/40 border border-blue-200 p-2.5 rounded-2xl space-y-2">
                 <div class="flex justify-between items-center">
                     <span class="text-[10px] font-black uppercase text-blue-700">Slot: <span id="selectedSlotText" class="text-blue-900 font-extrabold text-xs ml-1 bg-blue-100 px-2 py-0.5 rounded-md">--</span></span>
@@ -128,7 +128,7 @@
                 <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
                     <span id="editCountBadge">Slot Updates: 0/3</span>
                     <button onclick="submitData()" id="submitBtn" 
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition text-xs">
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl shadow transition text-xs">
                         Save Reading
                     </button>
                 </div>
@@ -165,7 +165,7 @@
         </div>
 
 
-        <!-- ================= MASTER ADMIN DASHBOARD ================= -->
+        <!-- MASTER ADMIN DASHBOARD -->
         <div id="adminDashboard" class="hidden space-y-3">
             
             <div class="flex justify-between items-center border-b pb-2.5 no-print">
@@ -178,8 +178,18 @@
                 </button>
             </div>
 
-            <!-- DATE SELECTOR & PDF PRINT BUTTON -->
-            <div class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-2.5 rounded-2xl no-print">
+            <!-- ADMIN VIEW TOGGLE (DAILY vs MONTHLY) -->
+            <div class="flex bg-slate-100 p-0.5 rounded-xl text-xs font-bold text-center no-print">
+                <button onclick="setAdminViewMode('daily')" id="adminModeDailyBtn" class="w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">
+                    <i class="fa-solid fa-calendar-day mr-1"></i> Daily Summary (3-Hour Slots)
+                </button>
+                <button onclick="setAdminViewMode('monthly')" id="adminModeMonthlyBtn" class="w-1/2 py-1.5 rounded-lg text-slate-500 hover:text-slate-700">
+                    <i class="fa-solid fa-calendar-days mr-1"></i> Monthly Summary (Day-Wise)
+                </button>
+            </div>
+
+            <!-- DAILY CONTROLS BAR -->
+            <div id="adminDailyControls" class="flex flex-wrap justify-between items-center gap-2 bg-blue-50 p-2.5 rounded-2xl no-print">
                 <div class="flex items-center gap-1 text-xs font-bold text-blue-900">
                     <span>Date:</span>
                     <button onclick="shiftAdminDate(-1)" title="Previous Day" 
@@ -200,14 +210,28 @@
                 </button>
             </div>
 
-            <!-- PRINT HEADER -->
-            <div class="hidden print-only text-center mb-2">
-                <h2 style="font-size: 15px; font-weight: bold;">MONSOON DAILY RAINFALL SUMMARY REPORT</h2>
-                <p style="font-size: 10px;">Meteorological Rainfall Date: <span id="adminPrintDate">--</span> (03:00 UTC to 03:00 UTC)</p>
+            <!-- MONTHLY CONTROLS BAR -->
+            <div id="adminMonthlyControls" class="hidden flex flex-wrap justify-between items-center gap-2 bg-purple-50 p-2.5 rounded-2xl no-print">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-purple-900">
+                    <span>Select Month:</span>
+                    <input type="month" id="adminMonthPicker" onchange="loadAdminMonthlySummary()" 
+                           class="bg-white border border-purple-200 text-purple-900 font-bold px-2.5 py-1 rounded-xl outline-none text-xs">
+                </div>
+
+                <button onclick="generateSinglePagePDF()" 
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1">
+                    <i class="fa-solid fa-file-pdf"></i> Print 1-Page Landscape PDF
+                </button>
             </div>
 
-            <!-- 21 STATIONS MATRIX TABLE -->
-            <div class="overflow-x-auto">
+            <!-- PRINT HEADER (DAILY & MONTHLY) -->
+            <div class="hidden print-only text-center mb-2">
+                <h2 style="font-size: 15px; font-weight: bold;" id="printHeaderTitle">MONSOON RAINFALL SUMMARY REPORT</h2>
+                <p style="font-size: 10px;" id="printHeaderSubtitle">Meteorological Rainfall Date: <span id="adminPrintDate">--</span></p>
+            </div>
+
+            <!-- DAILY 21 STATIONS MATRIX TABLE -->
+            <div id="adminDailyTableContainer" class="overflow-x-auto">
                 <table id="adminMatrixTable" class="w-full text-[10px] text-center border-collapse">
                     <thead>
                         <tr class="bg-slate-100 text-slate-700 font-bold">
@@ -224,6 +248,14 @@
                         </tr>
                     </thead>
                     <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- MONTHLY DAY-WISE MATRIX TABLE -->
+            <div id="adminMonthlyTableContainer" class="hidden overflow-x-auto">
+                <table id="adminMonthlyMatrixTable" class="w-full text-[9px] text-center border-collapse">
+                    <thead id="adminMonthlyTableHeader"></thead>
+                    <tbody id="adminMonthlyTableBody"></tbody>
                 </table>
             </div>
 
@@ -287,6 +319,7 @@
         let currentSlotIdx = 0;
         let currentSelectedSlot = "";
         let todayRainfallDateGlobal = "";
+        let adminViewMode = "daily"; // 'daily' or 'monthly'
 
         let masterStationsList = [];
         let selectedMasterTargetPhone = "";
@@ -370,19 +403,19 @@
                 document.getElementById("adminDashboard").classList.remove("hidden");
                 document.getElementById("dataForm").classList.add("hidden");
                 document.getElementById("appMainHeader").classList.remove("hidden");
-                document.getElementById("mainContainer").classList.replace("max-w-md", "max-w-4xl");
                 
                 if (userRole === "SILENT_ADMIN") {
                     setText("adminSubHeading", "Silent Observer Admin (View-Only Mode)");
                 } else {
                     setText("adminSubHeading", "Tap Any Cell in Table to Amend Reading");
                 }
-                loadAdminMasterSummary();
+                setAdminViewMode("daily");
             } else {
                 document.getElementById("dataForm").classList.remove("hidden");
                 document.getElementById("adminDashboard").classList.add("hidden");
-                document.getElementById("appMainHeader").classList.add("hidden"); // Hide logo header to save vertical space
+                document.getElementById("appMainHeader").classList.add("hidden");
                 document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-md");
+                document.getElementById("mainContainer").classList.replace("max-w-7xl", "max-w-md");
 
                 if (userRole === "MASTER_WORKER") {
                     document.getElementById("masterWorkerSection").classList.remove("hidden");
@@ -405,7 +438,41 @@
             document.getElementById("adminDashboard").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
             document.getElementById("appMainHeader").classList.remove("hidden");
-            document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-md");
+            document.getElementById("mainContainer").className = "bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-md border border-slate-200";
+        }
+
+        function setAdminViewMode(mode) {
+            adminViewMode = mode;
+            if (mode === 'daily') {
+                document.getElementById("adminDailyControls").classList.remove("hidden");
+                document.getElementById("adminMonthlyControls").classList.add("hidden");
+                document.getElementById("adminDailyTableContainer").classList.remove("hidden");
+                document.getElementById("adminMonthlyTableContainer").classList.add("hidden");
+                
+                document.getElementById("adminModeDailyBtn").className = "w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-blue-600 font-bold";
+                document.getElementById("adminModeMonthlyBtn").className = "w-1/2 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-4xl border border-slate-200";
+
+                loadAdminMasterSummary();
+            } else {
+                document.getElementById("adminDailyControls").classList.add("hidden");
+                document.getElementById("adminMonthlyControls").classList.remove("hidden");
+                document.getElementById("adminDailyTableContainer").classList.add("hidden");
+                document.getElementById("adminMonthlyTableContainer").classList.remove("hidden");
+
+                document.getElementById("adminModeMonthlyBtn").className = "w-1/2 py-1.5 rounded-lg bg-white shadow-sm text-purple-600 font-bold";
+                document.getElementById("adminModeDailyBtn").className = "w-1/2 py-1.5 rounded-lg text-slate-500 font-bold hover:text-slate-700";
+                document.getElementById("mainContainer").className = "bg-white p-4 sm:p-6 rounded-3xl shadow-xl w-full max-w-7xl border border-slate-200";
+
+                // Initialize month picker to current YYYY-MM if empty
+                const monthInput = document.getElementById("adminMonthPicker");
+                if (monthInput && !monthInput.value) {
+                    const now = new Date();
+                    const ym = now.toISOString().substring(0, 7);
+                    monthInput.value = ym;
+                }
+                loadAdminMonthlySummary();
+            }
         }
 
         async function loadMasterStationsDropdown() {
@@ -517,7 +584,6 @@
             }
         }
 
-        /* 4-COLUMN x 2-ROW COMPACT GRID (Height ~90px) */
         function renderSlotsGrid() {
             const gridEl = document.getElementById("slotsGrid");
             if (!gridEl) return;
@@ -718,6 +784,8 @@
                     todayRainfallDateGlobal = data.today_rainfall_date;
                     setText("adminDateText", data.rainfall_date);
                     setText("adminPrintDate", data.rainfall_date);
+                    setText("printHeaderTitle", "MONSOON DAILY RAINFALL SUMMARY REPORT");
+                    setText("printHeaderSubtitle", `Meteorological Rainfall Date: ${data.rainfall_date} (03:00 UTC to 03:00 UTC)`);
                     
                     if (dateInput && !dateInput.value) {
                         dateInput.value = data.rainfall_date;
@@ -788,6 +856,84 @@
             }
         }
 
+        // ================= MONTHLY SUMMARY MATRIX LOGIC =================
+        async function loadAdminMonthlySummary() {
+            const tableHeader = document.getElementById("adminMonthlyTableHeader");
+            const tableBody = document.getElementById("adminMonthlyTableBody");
+            if (!tableHeader || !tableBody) return;
+
+            tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-slate-400 font-bold">Loading Monthly Day-Wise Matrix...</td></tr>`;
+
+            const phone = localStorage.getItem("worker_phone") || "0000";
+            const monthInput = document.getElementById("adminMonthPicker");
+            const targetYM = monthInput ? monthInput.value : "";
+
+            try {
+                const reqUrl = `${SCRIPT_URL}?action=get_monthly_summary&phone=${encodeURIComponent(phone)}&year_month=${encodeURIComponent(targetYM)}`;
+                const response = await fetch(reqUrl);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    setText("adminPrintDate", data.year_month);
+                    setText("printHeaderTitle", "MONSOON MONTHLY DAY-WISE RAINFALL SUMMARY");
+                    setText("printHeaderSubtitle", `Month: ${data.year_month} (24-Hour Synoptic Rain Totals)`);
+
+                    const daysCount = data.days_in_month || 31;
+                    const stationMap = data.stations || {};
+
+                    // Build Dynamic Table Header (Day 1..31 + Total)
+                    let headerHtml = `<tr class="bg-slate-100 text-slate-700 font-bold"><th class="p-1.5 border text-left min-w-[120px]">Station</th>`;
+                    for (let d = 1; d <= daysCount; d++) {
+                        headerHtml += `<th class="p-0.5 border w-[22px]">${d}</th>`;
+                    }
+                    headerHtml += `<th class="p-1 border bg-purple-100 text-purple-900 font-black min-w-[50px]">Monthly Total (mm)</th></tr>`;
+                    tableHeader.innerHTML = headerHtml;
+
+                    tableBody.innerHTML = "";
+
+                    for (let st in stationMap) {
+                        const stData = stationMap[st] || {};
+                        const stDays = stData.days || {};
+                        const mTotal = stData.monthly_total || 0;
+
+                        let rowHtml = `<tr class="hover:bg-slate-50 border-b"><td class="p-1.5 border text-left font-bold text-slate-800 truncate max-w-[130px]">${st}</td>`;
+
+                        for (let d = 1; d <= daysCount; d++) {
+                            const val = stDays.hasOwnProperty(d) ? stDays[d] : "--";
+                            let cellText = "--";
+                            if (val === 0.01) cellText = "T";
+                            else if (val !== "--") cellText = val;
+
+                            // Clicking a day cell jumps to Daily View for that date!
+                            const formattedDay = String(d).padStart(2, '0');
+                            const targetDateStr = `${data.year_month}-${formattedDay}`;
+
+                            rowHtml += `<td onclick="jumpToDailyDate('${targetDateStr}')" 
+                                            class="p-0.5 border cursor-pointer hover:bg-purple-100 font-bold ${val !== '--' ? 'text-purple-700 bg-purple-50/50' : 'text-slate-300'}">
+                                            ${cellText}
+                                        </td>`;
+                        }
+
+                        rowHtml += `<td class="p-1 border font-black bg-purple-50 text-purple-900">${mTotal > 0 ? mTotal.toFixed(1) + 'm' : '0.0'}</td></tr>`;
+                        tableBody.innerHTML += rowHtml;
+                    }
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Monthly Fetch Failed: ${data.message || 'Unknown Server Error'}</td></tr>`;
+                }
+            } catch (err) {
+                tableBody.innerHTML = `<tr><td colspan="33" class="p-4 text-red-500 font-bold bg-red-50">⚠️ Network/JS Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function jumpToDailyDate(dateStr) {
+            if (dateStr > todayRainfallDateGlobal) return; // Prevent future dates
+            
+            const dateInput = document.getElementById("adminDatePicker");
+            if (dateInput) dateInput.value = dateStr;
+            
+            setAdminViewMode("daily");
+        }
+
         function openAdminModal(phone, station, slot, currentVal) {
             if (userRole !== "ADMIN") return;
             
@@ -855,6 +1001,37 @@
 
         function generateSinglePagePDF() {
             setText("printGeneratedTime", new Date().toUTCString());
+            
+            // Apply Dynamic Print Media CSS
+            const printStyleEl = document.getElementById("printStyleTag");
+            if (adminViewMode === "monthly") {
+                printStyleEl.innerHTML = `
+                    @media print {
+                        body { background: white !important; padding: 0 !important; font-size: 8px !important; }
+                        .no-print { display: none !important; }
+                        .print-only { display: block !important; }
+                        #adminDashboard { display: block !important; max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+                        table { width: 100% !important; border-collapse: collapse !important; margin-top: 5px !important; }
+                        th, td { border: 1px solid #94a3b8 !important; padding: 2px 3px !important; text-align: center !important; }
+                        th { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: bold !important; }
+                        @page { size: A4 landscape; margin: 5mm; }
+                    }
+                `;
+            } else {
+                printStyleEl.innerHTML = `
+                    @media print {
+                        body { background: white !important; padding: 0 !important; font-size: 10px !important; }
+                        .no-print { display: none !important; }
+                        .print-only { display: block !important; }
+                        #adminDashboard { display: block !important; max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+                        table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px !important; }
+                        th, td { border: 1px solid #94a3b8 !important; padding: 4px 5px !important; text-align: center !important; }
+                        th { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: bold !important; }
+                        @page { size: A4 portrait; margin: 8mm; }
+                    }
+                `;
+            }
+
             window.print();
         }
     </script>
