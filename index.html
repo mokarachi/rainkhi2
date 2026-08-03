@@ -3,46 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monsoon Rainfall Logger</title>
+    <title>Monsoon Rainfall Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* PDF PRINT MEDIA STYLES (Enforces Single Page A4 Printout) */
+        @media print {
+            body { background: white !important; padding: 0 !important; font-size: 10px !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            #adminDashboard { display: block !important; border: none !important; box-shadow: none !important; max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+            table { width: 100% !important; border-collapse: collapse !important; margin-top: 10px !important; }
+            th, td { border: 1px solid #94a3b8 !important; padding: 4px 6px !important; text-align: center !important; }
+            th { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: bold !important; }
+            @page { size: A4 portrait; margin: 8mm; }
+        }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6">
 
-    <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-lg border border-slate-200">
+    <!-- MAIN CONTAINER -->
+    <div id="mainContainer" class="bg-white p-5 sm:p-6 rounded-3xl shadow-xl w-full max-w-xl border border-slate-200">
         
-        <!-- HEADER -->
-        <div class="text-center mb-6">
+        <!-- HEADER (Hidden during print) -->
+        <div class="text-center mb-6 no-print">
             <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl mb-2 shadow-sm">
                 <i class="fa-solid font-bold text-2xl fa-cloud-showers-heavy"></i>
             </div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Rainfall Dashboard</h1>
-            <p class="text-xs font-semibold text-slate-400">Monsoon Observation System</p>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Monsoon Rainfall System</h1>
+            <p class="text-xs font-semibold text-slate-400">21 Stations Observation Network</p>
         </div>
 
         <!-- LOGIN SCREEN -->
-        <div id="loginScreen" class="space-y-4">
+        <div id="loginScreen" class="space-y-4 no-print">
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Mobile Number</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                         <i class="fa-solid fa-phone"></i>
                     </span>
-                    <input type="tel" id="phoneNumberInput" placeholder="e.g. 923001234567" 
+                    <input type="tel" id="phoneNumberInput" placeholder="Enter Mobile Number (or 0000 for Admin)" 
                            class="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-semibold text-slate-800 transition">
                 </div>
             </div>
             <button onclick="handleLogin()" 
                     class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-200 transition duration-150">
-                Sign In to Station
+                Sign In to System
             </button>
             <p id="loginError" class="text-red-500 text-xs font-semibold text-center hidden"></p>
         </div>
 
-        <!-- DASHBOARD & FORM -->
-        <div id="dataForm" class="hidden space-y-5">
+        <!-- ================= WORKER DASHBOARD ================= -->
+        <div id="dataForm" class="hidden space-y-5 no-print">
             
-            <!-- USER BADGE -->
             <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
                 <div>
                     <span class="text-slate-400 block font-semibold">Station Name</span>
@@ -53,14 +67,14 @@
                 </button>
             </div>
 
-            <!-- TODAY'S RAINFALL SUMMARY CARD -->
+            <!-- TODAY'S SUMMARY CARD -->
             <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-5 text-white shadow-lg shadow-blue-200 relative overflow-hidden">
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <p class="text-xs font-bold text-blue-200 uppercase tracking-wider">Today's Total Rain</p>
                         <h2 class="text-3xl font-black mt-1"><span id="summaryTotalRain">0.0</span> <span class="text-lg font-medium text-blue-200">mm</span></h2>
                     </div>
-                    <span id="summaryDate" class="text-[10px] font-extrabold bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-white">
+                    <span class="text-[10px] font-extrabold bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-white">
                         <i class="fa-regular fa-calendar-days mr-1"></i> <span id="displayDateText">--</span>
                     </span>
                 </div>
@@ -70,53 +84,102 @@
                 </div>
             </div>
 
-            <!-- 8-SLOT STATUS GRID -->
+            <!-- CLICK-TO-SELECT 8-SLOT GRID -->
             <div>
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Today's 8 UTC Slots</h3>
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-600">Tap Any Slot to Select</h3>
                     <button onclick="refreshTodayHistory()" class="text-[11px] font-bold text-blue-600 hover:underline">
                         <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
                     </button>
                 </div>
                 <div id="slotsGrid" class="grid grid-cols-2 gap-2">
-                    <!-- Dynamic slot cards loaded via JavaScript -->
+                    <!-- Dynamic slot cards -->
                 </div>
             </div>
 
-            <!-- INPUT FORM CARD -->
-            <div class="bg-white border border-slate-200 p-4 rounded-2xl space-y-3">
-                <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Submit New / Update Entry</h3>
-                
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Select UTC Slot</label>
-                    <select id="slotSelect" class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-slate-700 text-sm bg-slate-50">
-                        <option value="03:00 - 06:00 UTC">03:00 - 06:00 UTC</option>
-                        <option value="06:00 - 09:00 UTC">06:00 - 09:00 UTC</option>
-                        <option value="09:00 - 12:00 UTC">09:00 - 12:00 UTC</option>
-                        <option value="12:00 - 15:00 UTC">12:00 - 15:00 UTC</option>
-                        <option value="15:00 - 18:00 UTC">15:00 - 18:00 UTC</option>
-                        <option value="18:00 - 21:00 UTC">18:00 - 21:00 UTC</option>
-                        <option value="21:00 - 00:00 UTC">21:00 - 00:00 UTC</option>
-                        <option value="00:00 - 03:00 UTC">00:00 - 03:00 UTC</option>
-                    </select>
+            <!-- ENTRY INPUT BOX -->
+            <div class="bg-white border-2 border-blue-500/30 p-4 rounded-2xl space-y-3 bg-blue-50/20">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-black uppercase tracking-wider text-blue-700">Selected Slot</span>
+                    <span id="selectedSlotText" class="text-xs font-extrabold bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg">--</span>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Rainfall Amount (mm)</label>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Enter Rainfall (mm)</label>
                     <div class="relative">
                         <input type="number" step="0.1" id="rainfallInput" placeholder="0.0" 
-                               class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold text-slate-800 bg-slate-50">
+                               class="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold text-slate-800 bg-white">
                         <span class="absolute inset-y-0 right-0 flex items-center pr-4 font-bold text-slate-400 text-xs">mm</span>
                     </div>
                 </div>
 
                 <button onclick="submitData()" id="submitBtn" 
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold py-3.5 rounded-xl shadow-md shadow-emerald-100 transition">
+                        class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold py-3.5 rounded-xl shadow-md transition">
                     Save Reading
                 </button>
             </div>
 
             <p id="statusMsg" class="text-xs font-bold text-center p-3 rounded-xl hidden"></p>
+        </div>
+
+
+        <!-- ================= MASTER ADMIN DASHBOARD ================= -->
+        <div id="adminDashboard" class="hidden space-y-4">
+            
+            <div class="flex justify-between items-center border-b pb-3 no-print">
+                <div>
+                    <h2 class="text-lg font-black text-slate-800">👑 Master Admin Dashboard</h2>
+                    <p class="text-xs font-bold text-slate-400">All 21 Stations Real-Time Overview</p>
+                </div>
+                <button onclick="logout()" class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl hover:bg-red-50 hover:text-red-600">
+                    Logout
+                </button>
+            </div>
+
+            <!-- PDF PRINT BUTTON (Hidden in printout) -->
+            <div class="flex justify-between items-center bg-blue-50 p-3 rounded-2xl no-print">
+                <span class="text-xs font-bold text-blue-800">Date: <span id="adminDateText">--</span></span>
+                <button onclick="generateSinglePagePDF()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-pdf"></i> Print / Save 1-Page PDF
+                </button>
+            </div>
+
+            <!-- PRINT HEADER (Only visible when printing) -->
+            <div class="hidden print-only text-center mb-3">
+                <h2 style="font-size: 16px; font-weight: bold;">MONSOON DAILY RAINFALL SUMMARY REPORT</h2>
+                <p style="font-size: 11px;">Meteorological Rainfall Date: <span id="adminPrintDate">--</span> (03:00 UTC to 03:00 UTC)</p>
+            </div>
+
+            <!-- 21 STATIONS MATRIX TABLE -->
+            <div class="overflow-x-auto">
+                <table id="adminMatrixTable" class="w-full text-[11px] text-center border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 font-bold">
+                            <th class="p-2 border text-left">Station</th>
+                            <th class="p-1 border">03-06</th>
+                            <th class="p-1 border">06-09</th>
+                            <th class="p-1 border">09-12</th>
+                            <th class="p-1 border">12-15</th>
+                            <th class="p-1 border">15-18</th>
+                            <th class="p-1 border">18-21</th>
+                            <th class="p-1 border">21-00</th>
+                            <th class="p-1 border">00-03</th>
+                            <th class="p-2 border bg-blue-100 text-blue-900 font-black">Total (mm)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PRINT FOOTER -->
+            <div class="hidden print-only text-xs mt-4 flex justify-between">
+                <span>Generated On: <span id="printGeneratedTime"></span></span>
+                <span>Verified By: ___________________</span>
+            </div>
+
         </div>
 
     </div>
@@ -125,17 +188,25 @@
         // 1. PASTE YOUR GOOGLE APPS SCRIPT URL HERE
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGYlxgaYdQF5YgN764FdxD-A1_hCk37zzetHsmHMKB7w_Nc2fZN-irQycZCmSrB5EW/exec";
 
-        // 2. WORKER MAPPING
+        // 2. WORKERS & ADMIN MAPPING
         const WORKERS = {
-            "923133764792": "Station 01 - Habib_Home",
+            "0000": "ADMIN_USER", // Admin Phone Number
+			"923133764792": "Station 01 - Habib_Home",
             "923420474962": "Station 02 - Idasar_Home",
             "923131212478": "Station 03 - Kamran_Home",
-			      "923332214521": "Station 03 - Nizam_Home",
+			"923332214521": "Station 03 - Nizam_Home",
             "923001234567": "Station 01 - Alpha",
             "923009876543": "Station 02 - Beta",
             "923000000003": "Station 03 - Gamma",
             // Add all 21 workers here...
         };
+
+        const ALL_21_STATIONS = [
+            "Station 01 - Alpha",
+            "Station 02 - Beta",
+            "Station 03 - Gamma",
+            // List all 21 station names here to ensure all 21 show in Admin PDF
+        ];
 
         const ALL_SLOTS = [
             "03:00 - 06:00 UTC",
@@ -149,22 +220,15 @@
         ];
 
         let todayEntries = {};
+        let currentSelectedSlot = "";
 
         function getRecentUTCSlot() {
             const now = new Date();
             const hour = now.getUTCHours();
-            
             let endHour = Math.floor(hour / 3) * 3;
             let startHour = endHour - 3;
-
-            if (startHour < 0) {
-                startHour = 21;
-                endHour = 0;
-            }
-
-            const startStr = String(startHour).padStart(2, '0') + ":00";
-            const endStr = String(endHour).padStart(2, '0') + ":00";
-            return `${startStr} - ${endStr} UTC`;
+            if (startHour < 0) { startHour = 21; endHour = 0; }
+            return `${String(startHour).padStart(2, '0')}:00 - ${String(endHour).padStart(2, '0')}:00 UTC`;
         }
 
         window.onload = function() {
@@ -190,23 +254,50 @@
 
         function showDashboard(phone) {
             document.getElementById("loginScreen").classList.add("hidden");
-            document.getElementById("dataForm").classList.remove("hidden");
 
-            document.getElementById("displayStation").innerText = WORKERS[phone];
-            document.getElementById("slotSelect").value = getRecentUTCSlot();
-
-            refreshTodayHistory();
+            if (WORKERS[phone] === "ADMIN_USER") {
+                // Show Admin View
+                document.getElementById("adminDashboard").classList.remove("hidden");
+                document.getElementById("dataForm").classList.add("hidden");
+                document.getElementById("mainContainer").classList.replace("max-w-xl", "max-w-4xl");
+                loadAdminMasterSummary();
+            } else {
+                // Show Worker View
+                document.getElementById("dataForm").classList.remove("hidden");
+                document.getElementById("adminDashboard").classList.add("hidden");
+                document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
+                document.getElementById("displayStation").innerText = WORKERS[phone];
+                
+                selectSlot(getRecentUTCSlot());
+                refreshTodayHistory();
+            }
         }
 
         function logout() {
             localStorage.removeItem("worker_phone");
             document.getElementById("dataForm").classList.add("hidden");
+            document.getElementById("adminDashboard").classList.add("hidden");
             document.getElementById("loginScreen").classList.remove("hidden");
+            document.getElementById("mainContainer").classList.replace("max-w-4xl", "max-w-xl");
+        }
+
+        // --- WORKER INTERACTION: CLICK TO SELECT SLOT ---
+        function selectSlot(slot) {
+            currentSelectedSlot = slot;
+            document.getElementById("selectedSlotText").innerText = slot;
+
+            // Pre-fill input if a value exists for this slot
+            if (todayEntries.hasOwnProperty(slot)) {
+                document.getElementById("rainfallInput").value = todayEntries[slot];
+            } else {
+                document.getElementById("rainfallInput").value = "";
+            }
+
+            renderSlotsGrid();
         }
 
         async function refreshTodayHistory() {
             const phone = localStorage.getItem("worker_phone");
-            const activeSlot = getRecentUTCSlot();
 
             try {
                 const response = await fetch(SCRIPT_URL + "?phone=" + encodeURIComponent(phone));
@@ -220,40 +311,42 @@
                     let completedCount = Object.keys(todayEntries).length;
                     document.getElementById("summaryProgress").innerText = `${completedCount} / 8`;
 
-                    renderSlotsGrid(activeSlot);
+                    renderSlotsGrid();
                 }
             } catch (err) {
-                renderSlotsGrid(activeSlot);
+                renderSlotsGrid();
             }
         }
 
-        function renderSlotsGrid(activeSlot) {
+        function renderSlotsGrid() {
             const gridEl = document.getElementById("slotsGrid");
             gridEl.innerHTML = "";
 
             ALL_SLOTS.forEach(slot => {
                 const isFilled = todayEntries.hasOwnProperty(slot);
                 const value = isFilled ? todayEntries[slot] : null;
-                const isActive = (slot === activeSlot);
+                const isSelected = (slot === currentSelectedSlot);
 
-                let cardClass = "p-2.5 rounded-xl border flex justify-between items-center text-xs transition ";
+                let cardClass = "p-3 rounded-2xl border cursor-pointer transition transform active:scale-95 flex justify-between items-center text-xs ";
                 
-                if (isFilled) {
-                    cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900";
-                } else if (isActive) {
-                    cardClass += "bg-blue-50 border-blue-300 text-blue-900 ring-2 ring-blue-400/30";
+                if (isSelected) {
+                    cardClass += "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200 ring-2 ring-blue-600/30";
+                } else if (isFilled) {
+                    cardClass += "bg-emerald-50 border-emerald-200 text-emerald-900 hover:border-emerald-300";
                 } else {
-                    cardClass += "bg-slate-50 border-slate-200 text-slate-400";
+                    cardClass += "bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300";
                 }
 
                 gridEl.innerHTML += `
-                    <div class="${cardClass}">
+                    <div onclick="selectSlot('${slot}')" class="${cardClass}">
                         <div>
-                            <span class="font-bold block text-[11px]">${slot.replace(' UTC', '')}</span>
-                            <span class="text-[9px] uppercase font-bold text-slate-400">${isFilled ? 'Recorded' : (isActive ? 'Active' : 'Pending')}</span>
+                            <span class="font-bold block text-[11px] ${isSelected ? 'text-white' : ''}">${slot.replace(' UTC', '')}</span>
+                            <span class="text-[9px] uppercase font-bold ${isSelected ? 'text-blue-100' : (isFilled ? 'text-emerald-600' : 'text-slate-400')}">
+                                ${isFilled ? '✓ Recorded' : (isSelected ? 'Selected' : 'Tap to Select')}
+                            </span>
                         </div>
-                        <span class="font-black text-sm ${isFilled ? 'text-emerald-700' : 'text-slate-300'}">
-                            ${isFilled ? value + ' mm' : '--'}
+                        <span class="font-black text-sm ${isSelected ? 'text-white' : (isFilled ? 'text-emerald-700' : 'text-slate-300')}">
+                            ${isFilled ? value + 'm' : '--'}
                         </span>
                     </div>
                 `;
@@ -263,10 +356,15 @@
         async function submitData() {
             const phone = localStorage.getItem("worker_phone");
             const station = WORKERS[phone];
-            const selectedSlot = document.getElementById("slotSelect").value;
             const rainfall = document.getElementById("rainfallInput").value;
             const statusMsg = document.getElementById("statusMsg");
             const submitBtn = document.getElementById("submitBtn");
+
+            if (!currentSelectedSlot) {
+                statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
+                statusMsg.innerText = "Please tap a slot above to select it!";
+                return;
+            }
 
             if (rainfall === "" || rainfall < 0 || rainfall > 300) {
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-red-600 bg-red-50 block";
@@ -283,7 +381,7 @@
                 timestamp: new Date().toISOString(),
                 phone: phone,
                 station: station,
-                utc_slot: selectedSlot,
+                utc_slot: currentSelectedSlot,
                 rainfall: parseFloat(rainfall)
             };
 
@@ -296,10 +394,8 @@
                 });
 
                 statusMsg.className = "text-xs font-bold text-center p-3 rounded-xl text-emerald-700 bg-emerald-50 block";
-                statusMsg.innerText = `✅ Saved ${rainfall} mm for [${selectedSlot}]!`;
-                document.getElementById("rainfallInput").value = "";
-
-                // Refresh dashboard automatically
+                statusMsg.innerText = `✅ Saved ${rainfall} mm for [${currentSelectedSlot}]!`;
+                
                 setTimeout(refreshTodayHistory, 1000);
 
             } catch (error) {
@@ -309,6 +405,54 @@
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Save Reading";
             }
+        }
+
+
+        // ================= MASTER ADMIN LOGIC =================
+        async function loadAdminMasterSummary() {
+            const tableBody = document.getElementById("adminTableBody");
+            tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-slate-400 font-bold">Loading 21 Stations Real-Time Matrix...</td></tr>`;
+
+            try {
+                const response = await fetch(SCRIPT_URL + "?admin=true");
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    document.getElementById("adminDateText").innerText = data.rainfall_date;
+                    document.getElementById("adminPrintDate").innerText = data.rainfall_date;
+
+                    const stationMap = data.stations || {};
+                    tableBody.innerHTML = "";
+
+                    // Compile stations list
+                    let stationList = ALL_21_STATIONS.length > 0 ? ALL_21_STATIONS : Object.keys(WORKERS).map(k => WORKERS[k]).filter(s => s !== "ADMIN_USER");
+
+                    stationList.forEach(st => {
+                        const stData = stationMap[st] || {};
+                        const total = stData.total || 0;
+
+                        let rowHtml = `<tr class="hover:bg-slate-50 border-b"><td class="p-2 border text-left font-bold text-slate-800">${st}</td>`;
+
+                        ALL_SLOTS.forEach(slot => {
+                            const val = stData.hasOwnProperty(slot) ? stData[slot] : "--";
+                            const isZero = val === 0;
+                            const hasVal = val !== "--";
+                            
+                            rowHtml += `<td class="p-1 border ${hasVal ? (isZero ? 'text-slate-400' : 'font-bold text-blue-700 bg-blue-50/50') : 'text-slate-300'}">${val}</td>`;
+                        });
+
+                        rowHtml += `<td class="p-2 border font-black bg-blue-50 text-blue-900">${total > 0 ? total + ' mm' : '0.0'}</td></tr>`;
+                        tableBody.innerHTML += rowHtml;
+                    });
+                }
+            } catch (err) {
+                tableBody.innerHTML = `<tr><td colspan="10" class="p-4 text-red-500 font-bold">Failed to load admin summary. Check connection.</td></tr>`;
+            }
+        }
+
+        function generateSinglePagePDF() {
+            document.getElementById("printGeneratedTime").innerText = new Date().toUTCString();
+            window.print();
         }
     </script>
 </body>
